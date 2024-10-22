@@ -1,0 +1,1 @@
+open sln in CI628  /build
