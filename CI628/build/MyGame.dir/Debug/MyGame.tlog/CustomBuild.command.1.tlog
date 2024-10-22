@@ -1,0 +1,10 @@
+^E:\UNI WORK\MULTIPLAYER GAMES DEVELOPMENT\CI628\CMAKELISTS.TXT
+setlocal
+"E:\Uni work\Multiplayer Games Development\cmake\bin\cmake.exe" "-SE:/Uni work/Multiplayer Games Development/CI628" "-BE:/Uni work/Multiplayer Games Development/CI628/build" --check-stamp-file "E:/Uni work/Multiplayer Games Development/CI628/build/CMakeFiles/generate.stamp"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
