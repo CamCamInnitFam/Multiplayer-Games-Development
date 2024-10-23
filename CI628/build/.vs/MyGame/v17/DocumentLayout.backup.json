@@ -1,12 +1,51 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "E:\\Uni work\\Multiplayer Games Development\\CI628\\build\\",
-  "Documents": [],
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{977B2EB9-4E3F-3210-BA60-B8ECC6895EAC}|MyGame.vcxproj|E:\\Uni work\\Multiplayer Games Development\\CI628\\src\\MyGame.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{977B2EB9-4E3F-3210-BA60-B8ECC6895EAC}|MyGame.vcxproj|E:\\Uni work\\Multiplayer Games Development\\CI628\\src\\Main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
       "VerticalTabListWidth": 256,
-      "DocumentGroups": []
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "MyGame.cpp",
+              "DocumentMoniker": "E:\\Uni work\\Multiplayer Games Development\\CI628\\src\\MyGame.cpp",
+              "RelativeDocumentMoniker": "..\\src\\MyGame.cpp",
+              "ToolTip": "E:\\Uni work\\Multiplayer Games Development\\CI628\\src\\MyGame.cpp",
+              "RelativeToolTip": "..\\src\\MyGame.cpp",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAC4AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-10-23T19:20:00.732Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Main.cpp",
+              "DocumentMoniker": "E:\\Uni work\\Multiplayer Games Development\\CI628\\src\\Main.cpp",
+              "RelativeDocumentMoniker": "..\\src\\Main.cpp",
+              "ToolTip": "E:\\Uni work\\Multiplayer Games Development\\CI628\\src\\Main.cpp",
+              "RelativeToolTip": "..\\src\\Main.cpp",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-10-23T19:19:59.424Z"
+            }
+          ]
+        }
+      ]
     }
   ]
 }
