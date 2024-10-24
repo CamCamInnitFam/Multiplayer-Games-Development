@@ -1,3 +1,0 @@
-E:/Uni work/Multiplayer Games Development/CI628/build/CMakeFiles/MyGame.dir
-E:/Uni work/Multiplayer Games Development/CI628/build/CMakeFiles/ALL_BUILD.dir
-E:/Uni work/Multiplayer Games Development/CI628/build/CMakeFiles/ZERO_CHECK.dir
