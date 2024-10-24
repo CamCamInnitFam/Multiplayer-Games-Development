@@ -1,0 +1,5 @@
+you need to create your own build folder to create the VS solution file.
+
+Use almas instructions.
+
+cpp and header files will be changed and committed and pushed. Build will not. Build simply will use these new files. Make sure to remove old ones and then re-include the newer versions into your own build.
