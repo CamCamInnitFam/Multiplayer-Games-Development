@@ -81,9 +81,26 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
     private BatComponent player1Bat;
     private BatComponent player2Bat;
     private Entity block1;
+    private Entity block2;
     private Entity AIPlayer; //TODO
 
     private Server<String> server;
+
+    int maxBounces = 5;
+    int currentBounces = 0;
+
+    //implement different bullet types???
+    //more score for direct bullet hit?
+    //less score for bounced bullet hit???
+    //Two different entity types (ricochet bullet, non richochet)
+    //different key to fire these, or perhaps you have to reach a powerup and the next bullet is one that can ricoeht?
+
+
+    //perhaps the bullet (ball?) is always spawned in but is not visible
+    //server sends information about bullet location and then a 1 or 0 depending on whether or not it is visble and therefore
+    //should be drawn by the client's renderer
+    //if we only send bullet pos when its active or visible, this minimised traffic though
+    //perhaps talk about this in the report, what i chose to do and why?
 
     @Override
     protected void initInput() {
@@ -226,16 +243,8 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             @Override
             protected void onHitBoxTrigger(Entity a, Entity b, HitBox boxA, HitBox boxB) {
                 if (boxB.getName().equals("LEFT")) {
-                    inc("player2score", +1);
-
-                    server.broadcast("SCORES," + geti("player1score") + "," + geti("player2score"));
-
                     server.broadcast(HIT_WALL_LEFT);
                 } else if (boxB.getName().equals("RIGHT")) {
-                    inc("player1score", +1);
-
-                    server.broadcast("SCORES," + geti("player1score") + "," + geti("player2score"));
-
                     server.broadcast(HIT_WALL_RIGHT);
                 } else if (boxB.getName().equals("TOP")) {
                     server.broadcast(HIT_WALL_UP);
@@ -244,6 +253,13 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                 }
 
                 getGameScene().getViewport().shakeTranslational(5);
+
+                currentBounces++;
+
+                if(currentBounces >= maxBounces){
+                    a.removeFromWorld();
+                    currentBounces = 0;
+                }
             }
         });
 
@@ -252,13 +268,37 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             protected void onCollisionBegin(Entity a, Entity bat) {
                 playHitAnimation(bat);
                 a.removeFromWorld();
+                getGameScene().getViewport().shakeTranslational(10);
+
+                if(bat == player1)
+                    inc("player2score", +1);
+                else
+                    inc("player1score", +1);
 
                 server.broadcast(bat == player1 ? BALL_HIT_BAT1 : BALL_HIT_BAT2);
+                server.broadcast("SCORES," + geti("player1score") + "," + geti("player2score"));
+
+
+            }
+
+        };
+
+        CollisionHandler bulletBlockHandler = new CollisionHandler(EntityType.BULLET, EntityType.BLOCK) {
+            @Override
+            protected void onCollisionBegin(Entity bullet, Entity block) {
+                getGameScene().getViewport().shakeTranslational(8);
+                currentBounces++;
+
+                if(currentBounces >= maxBounces){
+                    bullet.removeFromWorld();
+                    currentBounces = 0;
+                }
             }
         };
 
         getPhysicsWorld().addCollisionHandler(ballBatHandler);
         getPhysicsWorld().addCollisionHandler(ballBatHandler.copyFor(EntityType.BULLET, EntityType.ENEMY_BAT));
+        getPhysicsWorld().addCollisionHandler((bulletBlockHandler));
     }
 
     @Override
@@ -300,6 +340,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
         player2Bat = player2.getComponent(BatComponent.class);
 
         block1 = spawn("block", new SpawnData(600, 340));
+        block2 = spawn("block", new SpawnData(420, 220));
     }
 
     private void playHitAnimation(Entity bat) {

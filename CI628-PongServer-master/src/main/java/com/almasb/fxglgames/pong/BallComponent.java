@@ -41,7 +41,7 @@ import static java.lang.Math.signum;
 public class BallComponent extends Component {
 
     private PhysicsComponent physics;
-    double speed = 200;
+    double speed = 240;
 
     @Override
     public void onUpdate(double tpf) {
