@@ -22,15 +22,11 @@ public class BarrelComponent extends Component
 
         barrelView.setTranslateX(5);
         barrelView.setTranslateY(15);
-
-
-
     }
 
     public void rotateBarrel(){
         Point2D mousePos = FXGL.getInput().getMousePositionWorld();
         double angle = Math.toDegrees(Math.atan2(mousePos.getY() - entity.getCenter().getY(), mousePos.getX() - entity.getCenter().getX() ));
         barrelView.setRotate(angle);
-
     }
 }

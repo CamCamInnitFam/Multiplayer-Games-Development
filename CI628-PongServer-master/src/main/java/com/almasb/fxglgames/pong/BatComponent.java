@@ -26,10 +26,16 @@
 
 package com.almasb.fxglgames.pong;
 
+import com.almasb.fxgl.animation.AnimationBuilder;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
+import com.almasb.fxgl.entity.GameWorld;
 import com.almasb.fxgl.entity.component.Component;
 import com.almasb.fxgl.physics.PhysicsComponent;
+import javafx.geometry.Point2D;
+
+import java.awt.*;
+import java.time.Duration;
 
 /**
  * @author Almas Baimagambetov (AlmasB) (almaslvl@gmail.com)
@@ -74,8 +80,6 @@ public class BatComponent extends Component {
                         isColliding = true;
             }
         }
-
-
         if(!isColliding)
             physics.overwritePosition(entity.getPosition().add(0, TANK_MOVEMENT));
 

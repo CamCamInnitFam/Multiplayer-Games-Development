@@ -33,6 +33,7 @@ import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.core.math.FXGLMath;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.SpawnData;
+import com.almasb.fxgl.entity.component.Component;
 import com.almasb.fxgl.input.UserAction;
 import com.almasb.fxgl.net.*;
 import com.almasb.fxgl.physics.CollisionHandler;
@@ -279,8 +280,6 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
                 server.broadcast(bat == player1 ? BALL_HIT_BAT1 : BALL_HIT_BAT2);
                 server.broadcast("SCORES," + geti("player1score") + "," + geti("player2score"));
-
-
             }
 
         };
@@ -322,9 +321,6 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             server.broadcast(message);
         }
 
-        //get mouse pos
-        Point2D mousePos = getInput().getMousePositionWorld();
-        //rotate barrel to mouse pos
         p1barrelComponent.rotateBarrel();
     }
 
@@ -361,6 +357,27 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                 .to(0)
                 .buildAndPlay();
     }
+    /*public void playMovementAnimation(Entity tank, String direction){
+        int x = 0;
+        int y = 0;
+        if(direction == "UP")
+            y = -60;
+        else if(direction == "DOWN")
+            y = 60;
+        else if(direction == "RIGHT")
+            x = 60;
+        else
+            x = -60;
+
+
+        animationBuilder()
+                .duration(new Duration(1))
+                .interpolator(Interpolators.LINEAR.EASE_OUT())
+                .translate(tank)
+                .from(tank.getPosition())
+                .to(tank.getPosition().add(x, y))
+                .buildAndPlay();
+    }*/
 
     private void spawnBullet()
     {

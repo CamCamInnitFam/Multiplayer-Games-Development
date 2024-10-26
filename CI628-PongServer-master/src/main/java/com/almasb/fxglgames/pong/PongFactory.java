@@ -92,7 +92,7 @@ public class PongFactory implements EntityFactory {
 
         return entityBuilder(data)
                 .type(EntityType.BLOCK)
-                .viewWithBBox(new Rectangle(60, 120, Color.BLACK))
+                .viewWithBBox(new Rectangle(60, 120, Color.SADDLEBROWN))
                 .with(new CollidableComponent(true))
                 .with(physics)
                 .build();
