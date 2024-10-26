@@ -320,33 +320,35 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             bullet.removeFromWorld();
         }
 
-        bullet = spawn("bullet", new SpawnData(player1.getX() + 70, player1.getY() + (player1.getHeight() /2)));
-
-        //bullet.getComponent(BallComponent.class).changeVelocityFromMousePos(getInput().getMousePositionUI());
         //getPhysicsWorld().onEntityRemoved(bullet) THEN activate new turn??? //TODO
 
         //initialise
         Point2D mousePos = getInput().getMousePositionUI();
-        Point2D playerPos = player1.getPosition();
+        double middlePosX = player1.getCenter().getX();
+        double middlePosY = player1.getCenter().getY();
+        double spawnOffset = 55;
 
         //get positions
-        double deltaX = mousePos.getX() - playerPos.getX();
-        double deltaY = mousePos.getY() - playerPos.getY();
+        double deltaX = mousePos.getX() - middlePosX;
+        double deltaY = mousePos.getY() - middlePosY;
 
         //normalise
-        double length = Math.sqrt(deltaX * deltaX + deltaY + deltaY);
+        double length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
         //check
         if(length >0)
         {
             double directionX = deltaX / length;
             double directionY = deltaY / length;
-            double bulletSpeed = bullet.getComponent(BallComponent.class).getSpeed();
+
+            //spawn bullet
+            bullet = spawn("bullet", new SpawnData(middlePosX + directionX * spawnOffset, middlePosY + directionY * spawnOffset));
 
             //set velocity
+            double bulletSpeed = bullet.getComponent(BallComponent.class).getSpeed();
             bullet.getComponent(PhysicsComponent.class).setLinearVelocity(directionX * bulletSpeed, directionY * bulletSpeed);
         }
-        
+
     }
 
 
