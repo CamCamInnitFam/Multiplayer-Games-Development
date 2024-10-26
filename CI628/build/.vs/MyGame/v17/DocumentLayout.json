@@ -3,6 +3,9 @@
   "WorkspaceRootPath": "E:\\Uni work\\Multiplayer Games Development\\CI628\\build\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|E:\\Program Files\\VC\\Tools\\MSVC\\14.41.34120\\crt\\src\\vcruntime\\gs_report.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{977B2EB9-4E3F-3210-BA60-B8ECC6895EAC}|MyGame.vcxproj|E:\\Uni work\\Multiplayer Games Development\\CI628\\src\\Main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
@@ -16,11 +19,24 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 1,
+          "SelectedChildIndex": 0,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 0,
+              "Title": "gs_report.c",
+              "DocumentMoniker": "E:\\Program Files\\VC\\Tools\\MSVC\\14.41.34120\\crt\\src\\vcruntime\\gs_report.c",
+              "RelativeDocumentMoniker": "..\\..\\..\\..\\Program Files\\VC\\Tools\\MSVC\\14.41.34120\\crt\\src\\vcruntime\\gs_report.c",
+              "ToolTip": "E:\\Program Files\\VC\\Tools\\MSVC\\14.41.34120\\crt\\src\\vcruntime\\gs_report.c",
+              "RelativeToolTip": "..\\..\\..\\..\\Program Files\\VC\\Tools\\MSVC\\14.41.34120\\crt\\src\\vcruntime\\gs_report.c",
+              "ViewState": "AgIAAKgBAAAAAAAAAAAMwNABAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000423|",
+              "WhenOpened": "2024-10-26T12:14:36.737Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
               "Title": "MyGame.cpp",
               "DocumentMoniker": "E:\\Uni work\\Multiplayer Games Development\\CI628\\src\\MyGame.cpp",
               "RelativeDocumentMoniker": "..\\src\\MyGame.cpp",
@@ -32,7 +48,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "Main.cpp",
               "DocumentMoniker": "E:\\Uni work\\Multiplayer Games Development\\CI628\\src\\Main.cpp",
               "RelativeDocumentMoniker": "..\\src\\Main.cpp",

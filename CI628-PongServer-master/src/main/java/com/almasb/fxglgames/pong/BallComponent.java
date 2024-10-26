@@ -60,7 +60,7 @@ public class BallComponent extends Component {
             physics.setVelocityY(signum(physics.getVelocityY()) * 5 * 50); //was *60
         }
 
-      
+
     }
 
     // this is a hack:

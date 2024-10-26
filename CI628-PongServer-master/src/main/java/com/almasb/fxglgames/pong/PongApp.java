@@ -292,6 +292,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
     private void initGameObjects() {
        // bullet = spawn("bullet", getAppWidth() / 2 - 5, getAppHeight() / 2 - 5);
+        //could spawn bullet but make this invisible or inactive, then when the player clicks, it is made visible and velocity is put on it and position etc...
         player1 = spawn("tank", new SpawnData(getAppWidth() / 4, getAppHeight() / 2).put("isPlayer", true));
         player2 = spawn("tank", new SpawnData(3 * getAppWidth() / 4, getAppHeight() / 2).put("isPlayer", false));
 
@@ -315,12 +316,16 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
     private void spawnBullet()
     {
         //ensure all bullets are removed before spawning another one
-        for(Entity bullet : getGameWorld().getEntitiesByType(EntityType.BULLET))
+        /*for(Entity bullet : getGameWorld().getEntitiesByType(EntityType.BULLET))
         {
             bullet.removeFromWorld();
-        }
+        }*/
 
         //getPhysicsWorld().onEntityRemoved(bullet) THEN activate new turn??? //TODO
+
+        if(bullet != null)
+            if(bullet.isActive())
+                return;
 
         //initialise
         Point2D mousePos = getInput().getMousePositionUI();
@@ -343,17 +348,13 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
             //spawn bullet
             bullet = spawn("bullet", new SpawnData(middlePosX + directionX * spawnOffset, middlePosY + directionY * spawnOffset));
-
-            //set velocity
-            double bulletSpeed = bullet.getComponent(BallComponent.class).getSpeed();
-            bullet.getComponent(PhysicsComponent.class).setLinearVelocity(directionX * bulletSpeed, directionY * bulletSpeed);
+            {
+                //set velocity
+                double bulletSpeed = bullet.getComponent(BallComponent.class).getSpeed();
+                bullet.getComponent(PhysicsComponent.class).setLinearVelocity(directionX * bulletSpeed, directionY * bulletSpeed);
+            }
         }
-
     }
-
-
-
-
 
     @Override
     public void onReceive(Connection<String> connection, String message) {
