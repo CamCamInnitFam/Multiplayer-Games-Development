@@ -3,10 +3,10 @@
   "WorkspaceRootPath": "E:\\Uni work\\Multiplayer Games Development\\CI628\\build\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{977B2EB9-4E3F-3210-BA60-B8ECC6895EAC}|MyGame.vcxproj|E:\\Uni work\\Multiplayer Games Development\\CI628\\src\\MyGame.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{977B2EB9-4E3F-3210-BA60-B8ECC6895EAC}|MyGame.vcxproj|E:\\Uni work\\Multiplayer Games Development\\CI628\\src\\Main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{977B2EB9-4E3F-3210-BA60-B8ECC6895EAC}|MyGame.vcxproj|E:\\Uni work\\Multiplayer Games Development\\CI628\\src\\Main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{977B2EB9-4E3F-3210-BA60-B8ECC6895EAC}|MyGame.vcxproj|E:\\Uni work\\Multiplayer Games Development\\CI628\\src\\MyGame.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
   "DocumentGroupContainers": [
@@ -16,11 +16,11 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "MyGame.cpp",
               "DocumentMoniker": "E:\\Uni work\\Multiplayer Games Development\\CI628\\src\\MyGame.cpp",
               "RelativeDocumentMoniker": "..\\src\\MyGame.cpp",
@@ -33,7 +33,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 0,
               "Title": "Main.cpp",
               "DocumentMoniker": "E:\\Uni work\\Multiplayer Games Development\\CI628\\src\\Main.cpp",
               "RelativeDocumentMoniker": "..\\src\\Main.cpp",
@@ -41,7 +41,8 @@
               "RelativeToolTip": "..\\src\\Main.cpp",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2024-10-23T19:19:59.424Z"
+              "WhenOpened": "2024-10-23T19:19:59.424Z",
+              "EditorCaption": ""
             }
           ]
         }

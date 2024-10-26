@@ -42,6 +42,9 @@ public class BatComponent extends Component {
 
     protected PhysicsComponent physics;
 
+    //for angle movement
+    //physics.overwriteAngle(entity.getRotation() + 90);
+
     public void up() {
         for(Entity block : FXGL.getGameWorld().getEntitiesByType(EntityType.BLOCK)){
 
@@ -69,7 +72,6 @@ public class BatComponent extends Component {
 
                     if(entity.getX() == block.getX())
                         isColliding = true;
-
             }
         }
 
@@ -122,9 +124,18 @@ public class BatComponent extends Component {
             physics.overwritePosition(entity.getPosition().add(-TANK_MOVEMENT, 0));
 
         isColliding = false;
+
     }
 
     public void stop() {
         physics.setLinearVelocity(0, 0);
+    }
+
+    public void shoot()
+    {
+        //Spawn bullet?
+        //any action related to shooting a bullet?
+        //places player back a little and then forward to mimic recoil?
+
     }
 }

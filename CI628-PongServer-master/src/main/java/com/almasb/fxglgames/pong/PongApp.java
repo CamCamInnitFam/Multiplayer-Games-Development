@@ -37,8 +37,11 @@ import com.almasb.fxgl.input.UserAction;
 import com.almasb.fxgl.net.*;
 import com.almasb.fxgl.physics.CollisionHandler;
 import com.almasb.fxgl.physics.HitBox;
+import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.ui.UI;
+import javafx.geometry.Point2D;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
 import javafx.util.Duration;
 
@@ -179,6 +182,12 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                 player2Bat.stop();
             }
         }, KeyCode.L);
+
+        getInput().addAction(new UserAction("Shoot")
+        {
+            @Override
+            protected void onActionBegin() {spawnBullet();}
+        }, MouseButton.PRIMARY);
     }
 
     @Override
@@ -242,6 +251,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             @Override
             protected void onCollisionBegin(Entity a, Entity bat) {
                 playHitAnimation(bat);
+                a.removeFromWorld();
 
                 server.broadcast(bat == player1 ? BALL_HIT_BAT1 : BALL_HIT_BAT2);
             }
@@ -264,9 +274,9 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
     @Override
     protected void onUpdate(double tpf) {
-        if (!server.getConnections().isEmpty()) {
+        if (!server.getConnections().isEmpty())
+        {
             var message = "GAME_DATA," + player1.getY() + "," + player1.getX() + "," + player2.getY() + "," + player2.getX() + "," + bullet.getX() + "," + bullet.getY();
-
             server.broadcast(message);
         }
     }
@@ -281,7 +291,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
     }
 
     private void initGameObjects() {
-        //bullet = spawn("bullet", getAppWidth() / 2 - 5, getAppHeight() / 2 - 5);
+       // bullet = spawn("bullet", getAppWidth() / 2 - 5, getAppHeight() / 2 - 5);
         player1 = spawn("tank", new SpawnData(getAppWidth() / 4, getAppHeight() / 2).put("isPlayer", true));
         player2 = spawn("tank", new SpawnData(3 * getAppWidth() / 4, getAppHeight() / 2).put("isPlayer", false));
 
@@ -301,6 +311,47 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                 .to(0)
                 .buildAndPlay();
     }
+
+    private void spawnBullet()
+    {
+        //ensure all bullets are removed before spawning another one
+        for(Entity bullet : getGameWorld().getEntitiesByType(EntityType.BULLET))
+        {
+            bullet.removeFromWorld();
+        }
+
+        bullet = spawn("bullet", new SpawnData(player1.getX() + 70, player1.getY() + (player1.getHeight() /2)));
+
+        //bullet.getComponent(BallComponent.class).changeVelocityFromMousePos(getInput().getMousePositionUI());
+        //getPhysicsWorld().onEntityRemoved(bullet) THEN activate new turn??? //TODO
+
+        //initialise
+        Point2D mousePos = getInput().getMousePositionUI();
+        Point2D playerPos = player1.getPosition();
+
+        //get positions
+        double deltaX = mousePos.getX() - playerPos.getX();
+        double deltaY = mousePos.getY() - playerPos.getY();
+
+        //normalise
+        double length = Math.sqrt(deltaX * deltaX + deltaY + deltaY);
+
+        //check
+        if(length >0)
+        {
+            double directionX = deltaX / length;
+            double directionY = deltaY / length;
+            double bulletSpeed = bullet.getComponent(BallComponent.class).getSpeed();
+
+            //set velocity
+            bullet.getComponent(PhysicsComponent.class).setLinearVelocity(directionX * bulletSpeed, directionY * bulletSpeed);
+        }
+        
+    }
+
+
+
+
 
     @Override
     public void onReceive(Connection<String> connection, String message) {
