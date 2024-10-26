@@ -31,9 +31,6 @@ import com.almasb.fxgl.entity.EntityFactory;
 import com.almasb.fxgl.entity.SpawnData;
 import com.almasb.fxgl.entity.Spawns;
 import com.almasb.fxgl.entity.components.CollidableComponent;
-import com.almasb.fxgl.particle.ParticleComponent;
-import com.almasb.fxgl.particle.ParticleEmitter;
-import com.almasb.fxgl.particle.ParticleEmitters;
 import com.almasb.fxgl.physics.BoundingShape;
 import com.almasb.fxgl.physics.HitBox;
 import com.almasb.fxgl.physics.PhysicsComponent;
@@ -79,12 +76,12 @@ public class PongFactory implements EntityFactory {
 
         return entityBuilder(data)
                 .type(isPlayer ? EntityType.PLAYER_BAT : EntityType.ENEMY_BAT)
-                //.viewWithBBox(new Rectangle(40, 40, Color.BLUEVIOLET))
-                .bbox(new HitBox(BoundingShape.box(60, 60)))
-                .view("testTank2.png")
+                .viewWithBBox("testTank2.png")
                 .with(new CollidableComponent(true))
                 .with(physics)
                 .with(new BatComponent())
+                .with(new BarrelComponent(texture("barrel.png")))
+                .rotate(isPlayer ? 0 : 180)
                 .build();
     }
 

@@ -79,7 +79,9 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
     private Entity player2;
     private Entity bullet;
     private BatComponent player1Bat;
+    private BarrelComponent p1barrelComponent;
     private BatComponent player2Bat;
+    //private
     private Entity block1;
     private Entity block2;
     private Entity AIPlayer; //TODO
@@ -319,6 +321,11 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             var message = "GAME_DATA," + player1.getY() + "," + player1.getX() + "," + player2.getY() + "," + player2.getX() + "," + bullet.getX() + "," + bullet.getY();
             server.broadcast(message);
         }
+
+        //get mouse pos
+        Point2D mousePos = getInput().getMousePositionWorld();
+        //rotate barrel to mouse pos
+        p1barrelComponent.rotateBarrel();
     }
 
     private void initScreenBounds() {
@@ -337,6 +344,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
         player2 = spawn("tank", new SpawnData(3 * getAppWidth() / 4, getAppHeight() / 2).put("isPlayer", false));
 
         player1Bat = player1.getComponent(BatComponent.class);
+        p1barrelComponent = player1.getComponent(BarrelComponent.class);
         player2Bat = player2.getComponent(BatComponent.class);
 
         block1 = spawn("block", new SpawnData(600, 340));
@@ -369,7 +377,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                 return;
 
         //initialise
-        Point2D mousePos = getInput().getMousePositionUI();
+        Point2D mousePos = getInput().getMousePositionWorld();
         double middlePosX = player1.getCenter().getX();
         double middlePosY = player1.getCenter().getY();
         double spawnOffset = 55;
