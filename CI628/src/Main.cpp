@@ -81,7 +81,7 @@ void loop(SDL_Renderer* renderer) {
     while (is_running) {
         // input
         while (SDL_PollEvent(&event)) {
-            if ((event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) && event.key.repeat == 0) {
+            if ((event.type == SDL_KEYDOWN || event.type == SDL_KEYUP || event.type == SDL_MOUSEBUTTONDOWN) && event.key.repeat == 0) {
                 game->input(event);
 
                 switch (event.key.keysym.sym) {
@@ -114,9 +114,9 @@ void loop(SDL_Renderer* renderer) {
 
 int run_game() {
     SDL_Window* window = SDL_CreateWindow(
-        "Multiplayer Pong Client",
+        "Multiplayer Tankz Client",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        800, 600,
+        1200, 800,
         SDL_WINDOW_SHOWN
     );
 

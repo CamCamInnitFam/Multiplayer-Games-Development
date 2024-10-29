@@ -317,7 +317,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
     protected void onUpdate(double tpf) {
         if (!server.getConnections().isEmpty())
         {
-            var message = "GAME_DATA," + player1.getY() + "," + player1.getX() + "," + player2.getY() + "," + player2.getX() + "," + bullet.getX() + "," + bullet.getY();
+            var message = "GAME_DATA," + player1.getY() + "," + player1.getX() + "," + player2.getY() + "," + player2.getX();
             server.broadcast(message);
         }
 
@@ -395,6 +395,11 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
         //initialise
         Point2D mousePos = getInput().getMousePositionWorld();
+
+        //TODO
+        //Will need to pass in the LMB_DOWN the coordinates of the player mouse and pass that through here
+        //it is getting stuck at the moment as when clicked on the client, there is no reocgnised mousePos server side.
+
         double middlePosX = player1.getCenter().getX();
         double middlePosY = player1.getCenter().getY();
         double spawnOffset = 55;
@@ -414,11 +419,10 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
             //spawn bullet
             bullet = spawn("bullet", new SpawnData(middlePosX + directionX * spawnOffset, middlePosY + directionY * spawnOffset));
-            {
-                //set velocity
-                double bulletSpeed = bullet.getComponent(BallComponent.class).getSpeed();
-                bullet.getComponent(PhysicsComponent.class).setLinearVelocity(directionX * bulletSpeed, directionY * bulletSpeed);
-            }
+
+            //set velocity
+            double bulletSpeed = bullet.getComponent(BallComponent.class).getSpeed();
+            bullet.getComponent(PhysicsComponent.class).setLinearVelocity(directionX * bulletSpeed, directionY * bulletSpeed);
         }
     }
 
@@ -427,6 +431,19 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
         var tokens = message.split(",");
 
         Arrays.stream(tokens).skip(1).forEach(key -> {
+
+            //left mouse button
+            if(key.startsWith("LMB")){
+                if(key.endsWith("_DOWN"))
+                    getInput().mockButtonPress(MouseButton.PRIMARY);
+
+               if(key.endsWith("_UP"))
+                    getInput().mockButtonRelease(MouseButton.PRIMARY);
+
+               return;
+            }
+            //perhaps an else here
+            //keyboard
             if (key.endsWith("_DOWN")) {
                 getInput().mockKeyPress(KeyCode.valueOf(key.substring(0, 1)));
             } else if (key.endsWith("_UP")) {

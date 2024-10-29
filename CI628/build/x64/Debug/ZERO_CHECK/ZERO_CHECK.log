@@ -1,1 +1,1 @@
-﻿
+﻿C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(1192,5): error MSB3191: Unable to create directory "E:\Uni work\Multiplayer Games Development\CI628\build\CMakeFiles\". Could not find a part of the path 'E:\Uni work\Multiplayer Games Development\CI628\build\CMakeFiles\'.
