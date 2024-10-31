@@ -14,6 +14,8 @@ static struct GameData {
     int player2X = 0;
     int ballX = 0;
     int ballY = 0;
+    int cursorX = 0;
+    int cursorY = 0;
 } game_data;
 
 class MyGame {
@@ -27,6 +29,7 @@ class MyGame {
 
     public:
         std::vector<std::string> messages;
+        int prevX, prevY;
 
         void on_receive(std::string message, std::vector<std::string>& args);
         void send(std::string message);

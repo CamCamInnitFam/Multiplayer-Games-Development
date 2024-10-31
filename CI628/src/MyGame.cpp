@@ -25,14 +25,8 @@ void MyGame::input(SDL_Event& event)
     int x, y;
     if (event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) 
     {
-        if (event.button.button == 1) { //left click
-            
-            //Send Mouse Position
-            SDL_GetMouseState(&x, &y);
-            send("MP(" + std::to_string(x) + '.' + std::to_string(y) + ")");
-            
-            //Send Input                          
-           
+        if (event.button.button == 1) { //left click                        
+            //Send Input                                    
             send("LMB_DOWN");
             SDL_Delay(100);
             send("LMB_UP");
@@ -84,8 +78,17 @@ void MyGame::update() {
     player1.x = game_data.player1X;
     player2.y = game_data.player2Y;
     player2.x = game_data.player2X;
-   // ball.y = game_data.ballY;
-   // ball.x = game_data.ballX;
+    
+    prevX = game_data.cursorX;
+    prevY = game_data.cursorY;
+    SDL_GetMouseState(&game_data.cursorX, &game_data.cursorY);
+
+    //only send if changed (minimise traffic)
+    if (game_data.cursorX != prevX || game_data.cursorY != prevY)    
+        send("MP(" + std::to_string(game_data.cursorX) + "." + std::to_string(game_data.cursorY) + ")");
+    
+    // ball.y = game_data.ballY;
+    // ball.x = game_data.ballX;
 }
 
 void MyGame::render(SDL_Renderer* renderer) {

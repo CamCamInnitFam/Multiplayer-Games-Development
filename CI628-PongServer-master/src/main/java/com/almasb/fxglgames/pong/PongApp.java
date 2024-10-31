@@ -323,7 +323,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             server.broadcast(message);
         }
 
-        p1barrelComponent.rotateBarrel();
+        p1barrelComponent.rotateBarrel(mousePosx, mousePosY);
     }
 
     private void initScreenBounds() {
