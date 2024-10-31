@@ -91,7 +91,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
     int maxBounces = 5;
     int currentBounces = 0;
-    int mousePosx = 0;
+    int mousePosX = 0;
     int mousePosY = 0;
 
     //implement different bullet types???
@@ -264,6 +264,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                 if(currentBounces >= maxBounces){
                     a.removeFromWorld();
                     currentBounces = 0;
+                    server.broadcast("BULLET_DESPAWN");
                 }
             }
         });
@@ -273,6 +274,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             protected void onCollisionBegin(Entity a, Entity bat) {
                 playHitAnimation(bat);
                 a.removeFromWorld();
+                server.broadcast("BULLET_DESPAWN");
                 getGameScene().getViewport().shakeTranslational(10);
 
                 if(bat == player1)
@@ -295,6 +297,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                 if(currentBounces >= maxBounces){
                     bullet.removeFromWorld();
                     currentBounces = 0;
+                    server.broadcast("BULLET_DESPAWN");
                 }
             }
         };
@@ -319,11 +322,17 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
     protected void onUpdate(double tpf) {
         if (!server.getConnections().isEmpty())
         {
-            var message = "GAME_DATA," + player1.getY() + "," + player1.getX() + "," + player2.getY() + "," + player2.getX();
+            //Send bullet data when there is a bullet active
+            String message;
+            if(bullet != null && bullet.isActive())
+                message = "GAME_DATA," + player1.getY() + "," + player1.getX() + "," + player2.getY() + "," + player2.getX() + "," + bullet.getX() + "," + bullet.getY();
+            else
+                message = "GAME_DATA," + player1.getY() + "," + player1.getX() + "," + player2.getY() + "," + player2.getX();
+
             server.broadcast(message);
         }
 
-        p1barrelComponent.rotateBarrel(mousePosx, mousePosY);
+        p1barrelComponent.rotateBarrel(mousePosX, mousePosY);
     }
 
     private void initScreenBounds() {
@@ -401,7 +410,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
         double spawnOffset = 55;
 
         //get positions
-        double deltaX = mousePosx - middlePosX;
+        double deltaX = mousePosX - middlePosX;
         double deltaY = mousePosY - middlePosY;
 
         //normalise
@@ -415,6 +424,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
             //spawn bullet
             bullet = spawn("bullet", new SpawnData(middlePosX + directionX * spawnOffset, middlePosY + directionY * spawnOffset));
+            server.broadcast("BULLET_SPAWN");
 
             //set velocity
             double bulletSpeed = bullet.getComponent(BallComponent.class).getSpeed();
@@ -434,7 +444,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                 String coordinates = key.substring(3, key.length()-1);
                 if(coordinates.split("\\.").length ==2)
                 {
-                    mousePosx = Integer.parseInt(coordinates.split("\\.")[0]);
+                    mousePosX = Integer.parseInt(coordinates.split("\\.")[0]);
                     mousePosY = Integer.parseInt(coordinates.split("\\.")[1]);
                 }
             }

@@ -8,10 +8,28 @@ void MyGame::on_receive(std::string cmd, std::vector<std::string>& args) {
             game_data.player1X = stoi(args.at(1));
             game_data.player2Y = stoi(args.at(2));
             game_data.player2X = stoi(args.at(3));
-            //game_data.ballX = stoi(args.at(4));
-            //game_data.ballY = stoi(args.at(5));
+            //game_data.bulletX = stoi(args.at(4));
+            //game_data.bulletY = stoi(args.at(5));
         }
-    } else {
+        if (args.size() == 6) {
+            game_data.player1Y = stoi(args.at(0));
+            game_data.player1X = stoi(args.at(1));
+            game_data.player2Y = stoi(args.at(2));
+            game_data.player2X = stoi(args.at(3));
+            game_data.bulletX = stoi(args.at(4));
+            game_data.bulletY = stoi(args.at(5));
+
+        }
+    }
+    else if (cmd == "BULLET_SPAWN") 
+    {
+        bulletOnScreen = true;
+    }
+    else if (cmd == "BULLET_DESPAWN") {
+        bulletOnScreen = false;
+        send("bullet despawned");
+    }      
+    else {
         std::cout << "Received: " << cmd << std::endl;
     }
 }
@@ -87,15 +105,18 @@ void MyGame::update() {
     if (game_data.cursorX != prevX || game_data.cursorY != prevY)    
         send("MP(" + std::to_string(game_data.cursorX) + "." + std::to_string(game_data.cursorY) + ")");
     
-    // ball.y = game_data.ballY;
-    // ball.x = game_data.ballX;
+     bullet.y = game_data.bulletY;
+     bullet.x = game_data.bulletX;
 }
 
 void MyGame::render(SDL_Renderer* renderer) {
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderDrawRect(renderer, &player1);
     SDL_RenderDrawRect(renderer, &player2);
-    //SDL_RenderDrawRect(renderer, &ball);
     SDL_RenderDrawRect(renderer, &block1);
     SDL_RenderDrawRect(renderer, &block2);
+
+    if (bulletOnScreen)
+        SDL_RenderDrawRect(renderer, &bullet);
+
 }
