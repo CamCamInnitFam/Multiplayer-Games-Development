@@ -91,16 +91,18 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
     int maxBounces = 5;
     int currentBounces = 0;
+    int mousePosx = 0;
+    int mousePosY = 0;
 
     //implement different bullet types???
     //more score for direct bullet hit?
     //less score for bounced bullet hit???
-    //Two different entity types (ricochet bullet, non richochet)
-    //different key to fire these, or perhaps you have to reach a powerup and the next bullet is one that can ricoeht?
+    //Two different entity types (ricochet bullet, non ricochet)
+    //different key to fire these, or perhaps you have to reach a powerup and the next bullet is one that can ricochet?
 
 
     //perhaps the bullet (ball?) is always spawned in but is not visible
-    //server sends information about bullet location and then a 1 or 0 depending on whether or not it is visble and therefore
+    //server sends information about bullet location and then a 1 or 0 depending on whether or not it is visible and therefore
     //should be drawn by the client's renderer
     //if we only send bullet pos when its active or visible, this minimised traffic though
     //perhaps talk about this in the report, what i chose to do and why?
@@ -389,24 +391,18 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
         //getPhysicsWorld().onEntityRemoved(bullet) THEN activate new turn??? //TODO
 
+        //must only ever be one bullet
         if(bullet != null)
             if(bullet.isActive())
                 return;
-
-        //initialise
-        Point2D mousePos = getInput().getMousePositionWorld();
-
-        //TODO
-        //Will need to pass in the LMB_DOWN the coordinates of the player mouse and pass that through here
-        //it is getting stuck at the moment as when clicked on the client, there is no reocgnised mousePos server side.
 
         double middlePosX = player1.getCenter().getX();
         double middlePosY = player1.getCenter().getY();
         double spawnOffset = 55;
 
         //get positions
-        double deltaX = mousePos.getX() - middlePosX;
-        double deltaY = mousePos.getY() - middlePosY;
+        double deltaX = mousePosx - middlePosX;
+        double deltaY = mousePosY - middlePosY;
 
         //normalise
         double length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
@@ -429,8 +425,22 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
     @Override
     public void onReceive(Connection<String> connection, String message) {
         var tokens = message.split(",");
+        //WILL HAVE TO DEAL WITH IDs  ?
 
         Arrays.stream(tokens).skip(1).forEach(key -> {
+            //MOUSE POS = MP
+            if(key.startsWith("MP"))
+            {
+                String coordinates = key.substring(3, key.length()-1);
+                if(coordinates.split("\\.").length ==2)
+                {
+                    mousePosx = Integer.parseInt(coordinates.split("\\.")[0]);
+                    mousePosY = Integer.parseInt(coordinates.split("\\.")[1]);
+                }
+            }
+
+
+            //INPUT
 
             //left mouse button
             if(key.startsWith("LMB")){
@@ -440,14 +450,13 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                if(key.endsWith("_UP"))
                     getInput().mockButtonRelease(MouseButton.PRIMARY);
 
-               return;
-            }
-            //perhaps an else here
-            //keyboard
-            if (key.endsWith("_DOWN")) {
-                getInput().mockKeyPress(KeyCode.valueOf(key.substring(0, 1)));
-            } else if (key.endsWith("_UP")) {
-                getInput().mockKeyRelease(KeyCode.valueOf(key.substring(0, 1)));
+            }else{
+                //keyboard
+                if (key.endsWith("_DOWN")) {
+                    getInput().mockKeyPress(KeyCode.valueOf(key.substring(0, 1)));
+                } else if (key.endsWith("_UP")) {
+                    getInput().mockKeyRelease(KeyCode.valueOf(key.substring(0, 1)));
+                }
             }
         });
     }

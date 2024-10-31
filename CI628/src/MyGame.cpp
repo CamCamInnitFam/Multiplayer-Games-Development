@@ -21,13 +21,25 @@ void MyGame::send(std::string message) {
 }
 
 void MyGame::input(SDL_Event& event) 
-{   
+{  
+    int x, y;
     if (event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) 
     {
         if (event.button.button == 1) { //left click
-            send(event.type == SDL_MOUSEBUTTONDOWN ? "LMB_DOWN" : "LMB_UP");
-            return;
+            
+            //Send Mouse Position
+            SDL_GetMouseState(&x, &y);
+            send("MP(" + std::to_string(x) + '.' + std::to_string(y) + ")");
+            
+            //Send Input                          
+           
+            send("LMB_DOWN");
+            SDL_Delay(100);
+            send("LMB_UP");
+
+            //send(event.type == SDL_MOUSEBUTTONDOWN ? "LMB_DOWN" : "LMB_UP");
         }
+        return;
     }
            
     switch (event.key.keysym.sym) {

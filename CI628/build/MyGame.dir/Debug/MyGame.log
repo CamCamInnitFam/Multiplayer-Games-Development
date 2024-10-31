@@ -1,2 +1,2 @@
-﻿C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets(2165,5): warning : The referenced project 'E:\Uni work\Multiplayer Games Development\CI628\build\ZERO_CHECK.vcxproj' does not exist.
-C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(547,5): error MSB3191: Unable to create directory "E:\Uni work\Multiplayer Games Development\CI628\build\Debug\". Could not find a part of the path 'E:\Uni work\Multiplayer Games Development\CI628\build\Debug\'.
+﻿  MyGame.cpp
+  MyGame.vcxproj -> E:\Uni work\Multiplayer Games Development\CI628\build\Debug\MyGame.exe
