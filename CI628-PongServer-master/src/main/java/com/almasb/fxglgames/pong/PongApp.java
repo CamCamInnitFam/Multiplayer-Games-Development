@@ -50,7 +50,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -82,6 +84,9 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
     private BatComponent player1Bat;
     private BarrelComponent p1barrelComponent;
     private BatComponent player2Bat;
+    //private Entity[] Players;
+    private List<Entity> Players;
+
     //private
     private Entity block1;
     private Entity block2;
@@ -223,21 +228,55 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
         Writers.INSTANCE.addTCPWriter(String.class, outputStream -> new MessageWriterS(outputStream));
         Readers.INSTANCE.addTCPReader(String.class, in -> new MessageReaderS(in));
 
-        server = getNetService().newTCPServer(55555, new ServerConfig<>(String.class));
+        Players = new ArrayList<>();
 
-        server.setOnConnected(connection -> {
-            connection.addMessageHandlerFX(this);
-        });
+        //Set up world before server?
 
         getGameWorld().addEntityFactory(new PongFactory());
         getGameScene().setBackgroundColor(Color.DARKGREEN);
 
-        initScreenBounds();
         initGameObjects();
+        initScreenBounds();
+
+
+        server = getNetService().newTCPServer(55555, new ServerConfig<>(String.class));
+
+        server.setOnConnected(connection -> { //when a client connects
+            boolean hasSetId = false;
+
+            //loop through all player Entities and check if connected
+            //if not - assign id to client and entity
+            for(int i = 0; i < Players.size(); i++){
+                if(Players.get(i).getComponent(BatComponent.class).connected == false){
+                    connection.getLocalSessionData().setValue("ID", i);
+                    Players.get(i).getComponent(BatComponent.class).connected = true;
+                    Players.get(i).getComponent(BatComponent.class).id = i;
+                    hasSetId = true;
+                    break;
+                }
+            }
+
+            //make extras -1 (they can spectate)
+            if(!hasSetId)
+                connection.getLocalSessionData().setValue("ID", -1);
+
+            //Client is sent its own ID for it to handle
+            //This will usually be 0 (p1), 1 (p2) or -1 (spectator).
+            connection.send("ID," + connection.getLocalSessionData().getValue("ID"));
+            connection.addMessageHandlerFX(this);
+        });
+
+
 
         var t = new Thread(server.startTask()::run);
         t.setDaemon(true);
         t.start();
+
+
+        //CHECKING CLIENT CONNECTION
+        //for(Connection connection : server.getConnections()){
+        //    if (connection.getLocalSessionData().getValue("ID") == )
+        //}
     }
 
     @Override
@@ -349,6 +388,8 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
         //could spawn bullet but make this invisible or inactive, then when the player clicks, it is made visible and velocity is put on it and position etc...
         player1 = spawn("tank", new SpawnData(getAppWidth() / 4, getAppHeight() / 2).put("isPlayer", true));
         player2 = spawn("tank", new SpawnData(3 * getAppWidth() / 4, getAppHeight() / 2).put("isPlayer", false));
+        Players.add(player1);
+        Players.add(player2);
 
         player1Bat = player1.getComponent(BatComponent.class);
         p1barrelComponent = player1.getComponent(BarrelComponent.class);

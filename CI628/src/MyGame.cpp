@@ -32,6 +32,10 @@ void MyGame::on_receive(std::string cmd, std::vector<std::string>& args) {
     else {
         std::cout << "Received: " << cmd << std::endl;
     }
+
+    //if cmd .includes ("PLAYER)"
+    //id = args.stoi(*id index*)
+    //player[id].NetworkUpdate(cmd, args) ?
 }
 
 void MyGame::send(std::string message) {

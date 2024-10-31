@@ -23,7 +23,7 @@ class MyGame {
     private:
         SDL_Rect player1 = { 0, 0, 60, 60 };
         SDL_Rect player2 = { 0, 0, 60, 60 };
-        SDL_Rect bullet = { 0, 0, 5, 5 };
+        SDL_Rect bullet = { 0, 0, 8, 8 };
         SDL_Rect block1 = { 600, 340, 60, 120 };
         SDL_Rect block2 = { 420,220,60, 120};
         

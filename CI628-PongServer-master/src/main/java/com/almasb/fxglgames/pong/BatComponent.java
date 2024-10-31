@@ -45,6 +45,8 @@ public class BatComponent extends Component {
     //private static final double BAT_SPEED = 420;
     private static final double TANK_MOVEMENT = 60; //was 40
     private boolean isColliding = false;
+    public int id = -1;
+    public boolean connected = false;
 
     protected PhysicsComponent physics;
 
