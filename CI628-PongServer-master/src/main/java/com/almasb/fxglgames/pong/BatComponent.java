@@ -26,10 +26,16 @@
 
 package com.almasb.fxglgames.pong;
 
+import com.almasb.fxgl.animation.AnimationBuilder;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
+import com.almasb.fxgl.entity.GameWorld;
 import com.almasb.fxgl.entity.component.Component;
 import com.almasb.fxgl.physics.PhysicsComponent;
+import javafx.geometry.Point2D;
+
+import java.awt.*;
+import java.time.Duration;
 
 /**
  * @author Almas Baimagambetov (AlmasB) (almaslvl@gmail.com)
@@ -41,6 +47,9 @@ public class BatComponent extends Component {
     private boolean isColliding = false;
 
     protected PhysicsComponent physics;
+
+    //for angle movement
+    //physics.overwriteAngle(entity.getRotation() + 90);
 
     public void up() {
         for(Entity block : FXGL.getGameWorld().getEntitiesByType(EntityType.BLOCK)){
@@ -69,11 +78,8 @@ public class BatComponent extends Component {
 
                     if(entity.getX() == block.getX())
                         isColliding = true;
-
             }
         }
-
-
         if(!isColliding)
             physics.overwritePosition(entity.getPosition().add(0, TANK_MOVEMENT));
 
@@ -122,9 +128,18 @@ public class BatComponent extends Component {
             physics.overwritePosition(entity.getPosition().add(-TANK_MOVEMENT, 0));
 
         isColliding = false;
+
     }
 
     public void stop() {
         physics.setLinearVelocity(0, 0);
+    }
+
+    public void shoot()
+    {
+        //Spawn bullet?
+        //any action related to shooting a bullet?
+        //places player back a little and then forward to mimic recoil?
+
     }
 }
