@@ -1,4 +1,1 @@
-﻿  MyGame.cpp
-E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(47,12): warning C4101: 'y': unreferenced local variable
-E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(47,9): warning C4101: 'x': unreferenced local variable
-  MyGame.vcxproj -> E:\Uni work\Multiplayer Games Development\CI628\build\Debug\MyGame.exe
+﻿  MyGame.vcxproj -> E:\Uni work\Multiplayer Games Development\CI628\build\Debug\MyGame.exe

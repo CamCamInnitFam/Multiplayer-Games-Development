@@ -46,10 +46,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
 import javafx.util.Duration;
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -99,30 +96,12 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
     int mousePosX = 0;
     int mousePosY = 0;
 
-    //implement different bullet types???
-    //more score for direct bullet hit?
-    //less score for bounced bullet hit???
-    //Two different entity types (ricochet bullet, non ricochet)
-    //different key to fire these, or perhaps you have to reach a powerup and the next bullet is one that can ricochet?
-
-
-    //perhaps the bullet (ball?) is always spawned in but is not visible
-    //server sends information about bullet location and then a 1 or 0 depending on whether or not it is visible and therefore
-    //should be drawn by the client's renderer
-    //if we only send bullet pos when its active or visible, this minimised traffic though
-    //perhaps talk about this in the report, what i chose to do and why?
-
     @Override
     protected void initInput() {
         getInput().addAction(new UserAction("Up1") {
             @Override
             protected void onActionBegin() {
-                player1Bat.up();
-            }
-
-            @Override
-            protected void onActionEnd() {
-                player1Bat.stop();
+                up();
             }
         }, KeyCode.W);
 
@@ -238,27 +217,35 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
         initGameObjects();
         initScreenBounds();
 
-
         server = getNetService().newTCPServer(55555, new ServerConfig<>(String.class));
 
         server.setOnConnected(connection -> { //when a client connects
             boolean hasSetId = false;
+            System.out.println("connected!");
 
             //loop through all player Entities and check if connected
             //if not - assign id to client and entity
             for(int i = 0; i < Players.size(); i++){
                 if(Players.get(i).getComponent(BatComponent.class).connected == false){
                     connection.getLocalSessionData().setValue("ID", i);
+                    connection.getLocalSessionData().setValue("HeartBeatTime", System.currentTimeMillis() + 2000);
+                    connection.getLocalSessionData().setValue("Connected", true);
                     Players.get(i).getComponent(BatComponent.class).connected = true;
                     Players.get(i).getComponent(BatComponent.class).id = i;
                     hasSetId = true;
+                    System.out.println("Player Connected");
                     break;
                 }
             }
 
-            //make extras -1 (they can spectate)
-            if(!hasSetId)
+            //make extras -1 (they can spectate) they are still connected
+            if(!hasSetId){
                 connection.getLocalSessionData().setValue("ID", -1);
+                connection.getLocalSessionData().setValue("Connected", true);
+                connection.getLocalSessionData().setValue("HeartBeatTime", System.currentTimeMillis() + 2000);
+                System.out.println("Now Spectating...");
+            }
+
 
             //Client is sent its own ID for it to handle
             //This will usually be 0 (p1), 1 (p2) or -1 (spectator).
@@ -266,17 +253,28 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             connection.addMessageHandlerFX(this);
         });
 
+        server.setOnDisconnected(connection -> {
+            System.out.println("CLIENT DISCONNECT");
+            int connectionID = connection.getLocalSessionData().getValue("ID");
+
+            if(connectionID == -1)
+                return;
+
+            for(Entity player : Players){
+                if(player.getComponent(BatComponent.class).id == connectionID){
+                    player.getComponent(BatComponent.class).connected = false;
+                    player.getComponent(BatComponent.class).id = -1;
+                    System.out.println("Player Disconnected");
+                    break;
+                }
+            }
+
+        });
 
 
         var t = new Thread(server.startTask()::run);
         t.setDaemon(true);
         t.start();
-
-
-        //CHECKING CLIENT CONNECTION
-        //for(Connection connection : server.getConnections()){
-        //    if (connection.getLocalSessionData().getValue("ID") == )
-        //}
     }
 
     @Override
@@ -363,15 +361,72 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
         {
             //Send bullet data when there is a bullet active
             String message;
+
+            //CHECK IF POS HAVE CHANGED FIRST
+            //POTENTIALLY STOP BROADCASTING - ONLY SEND CLIENT 1 INFORMATION ABOUT CLIENT 2 ETC? ONLY WHEN CLIENT KNOWS ITS OWN POSITION (which it can calculate easily with +- 40).
             if(bullet != null && bullet.isActive())
                 message = "GAME_DATA," + player1.getY() + "," + player1.getX() + "," + player2.getY() + "," + player2.getX() + "," + bullet.getX() + "," + bullet.getY();
             else
                 message = "GAME_DATA," + player1.getY() + "," + player1.getX() + "," + player2.getY() + "," + player2.getX();
 
             server.broadcast(message);
+
+            //if p1 turn:
+            p1barrelComponent.rotateBarrel(mousePosX, mousePosY);
+            //else:
+                //p2barrelComponent.rotateBarrel(mousePosx, mousePosY);
+
+            //For all client connections (active and inactive)
+            for(Connection connection: server.getConnections())
+            {
+                //Checks
+                if(!connection.isConnected())
+                    continue;
+
+                if(!(boolean)connection.getLocalSessionData().getValue("Connected"))
+                    continue;
+
+                //Setup
+                long lastHeartBeatTime = connection.getLocalSessionData().getValue("HeartBeatTime");
+
+                //Check last Signal Time from client
+                if(System.currentTimeMillis() > lastHeartBeatTime + 3000){
+                    //connection.terminate();
+                    int connectionID = connection.getLocalSessionData().getValue("ID");
+                    System.out.println("Client " + connectionID + " disconnected!");
+                    connection.getLocalSessionData().setValue("Connected", false);
+
+                    //If not a spectator, make linked player disconnect
+                    if(connectionID != -1)
+                    {
+                        Players.get(connectionID).getComponent(BatComponent.class).connected = false;
+                    }
+                }
+            }
+
+            //Add spectators to game if one of the main clients disconnect
+            for(int i = 0; i < Players.size(); i++)
+            {
+                if(!Players.get(i).getComponent(BatComponent.class).connected)
+                {
+                    for(Connection connection : server.getConnections())
+                    {
+                        int id = connection.getLocalSessionData().getValue("ID");
+                        if((boolean)connection.getLocalSessionData().getValue("Connected")  && id == -1)
+                        {
+                            connection.getLocalSessionData().setValue("ID", i);
+                            connection.send("ID," + i);
+                            Players.get(i).getComponent(BatComponent.class).connected = true;
+                        }
+                    }
+                }
+            }
         }
 
-        p1barrelComponent.rotateBarrel(mousePosX, mousePosY);
+     if(server.getConnections().size() < 2){
+            //add AI?
+            //TODO
+        }
     }
 
     private void initScreenBounds() {
@@ -409,27 +464,6 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                 .to(0)
                 .buildAndPlay();
     }
-    /*public void playMovementAnimation(Entity tank, String direction){
-        int x = 0;
-        int y = 0;
-        if(direction == "UP")
-            y = -60;
-        else if(direction == "DOWN")
-            y = 60;
-        else if(direction == "RIGHT")
-            x = 60;
-        else
-            x = -60;
-
-
-        animationBuilder()
-                .duration(new Duration(1))
-                .interpolator(Interpolators.LINEAR.EASE_OUT())
-                .translate(tank)
-                .from(tank.getPosition())
-                .to(tank.getPosition().add(x, y))
-                .buildAndPlay();
-    }*/
 
     private void spawnBullet()
     {
@@ -446,6 +480,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             if(bullet.isActive())
                 return;
 
+        //CHANGE BASED ON ID SEND IN FROM CLIENT
         double middlePosX = player1.getCenter().getX();
         double middlePosY = player1.getCenter().getY();
         double spawnOffset = 55;
@@ -475,11 +510,18 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
     @Override
     public void onReceive(Connection<String> connection, String message) {
+
         var tokens = message.split(",");
         //WILL HAVE TO DEAL WITH IDs  ?
 
         Arrays.stream(tokens).skip(1).forEach(key -> {
+
+            if(key.equals("heartbeat")){
+                connection.getLocalSessionData().setValue("HeartBeatTime", System.currentTimeMillis()+500);
+            }
+
             //MOUSE POS = MP
+            //SHOULD ONLY RECIEVE FROM CLIENT WHEN IT IS THEIR TURN...
             if(key.startsWith("MP"))
             {
                 String coordinates = key.substring(3, key.length()-1);
@@ -490,7 +532,6 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                 }
             }
 
-
             //INPUT
 
             //left mouse button
@@ -498,13 +539,14 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                 if(key.endsWith("_DOWN"))
                     getInput().mockButtonPress(MouseButton.PRIMARY);
 
-               if(key.endsWith("_UP"))
+                if(key.endsWith("_UP"))
                     getInput().mockButtonRelease(MouseButton.PRIMARY);
 
             }else{
                 //keyboard
                 if (key.endsWith("_DOWN")) {
                     getInput().mockKeyPress(KeyCode.valueOf(key.substring(0, 1)));
+                    
                 } else if (key.endsWith("_UP")) {
                     getInput().mockKeyRelease(KeyCode.valueOf(key.substring(0, 1)));
                 }
@@ -570,5 +612,10 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
     public static void main(String[] args) {
         launch(args);
+    }
+
+    public void up(){
+
+
     }
 }

@@ -16,6 +16,7 @@ static struct GameData {
     int bulletY = 0;
     int cursorX = 0;
     int cursorY = 0;
+    int id = -1;
 } game_data;
 
 class MyGame {
@@ -32,12 +33,14 @@ class MyGame {
         std::vector<std::string> messages;
         int prevX, prevY;
         bool bulletOnScreen = false;
+        Uint32 nextSendTime = SDL_GetTicks();
 
         void on_receive(std::string message, std::vector<std::string>& args);
         void send(std::string message);
         void input(SDL_Event& event);
         void update();
         void render(SDL_Renderer* renderer);
+        void HeartBeat();
 };
 
 #endif

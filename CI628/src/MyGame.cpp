@@ -2,7 +2,7 @@
 #include <iostream>
 
 void MyGame::on_receive(std::string cmd, std::vector<std::string>& args) {
-    if (cmd == "GAME_DATA") {        
+    if (cmd == "GAME_DATA") {
         if (args.size() == 4) {
             game_data.player1Y = stoi(args.at(0));
             game_data.player1X = stoi(args.at(1));
@@ -21,17 +21,18 @@ void MyGame::on_receive(std::string cmd, std::vector<std::string>& args) {
 
         }
     }
-    else if (cmd == "BULLET_SPAWN") 
-    {
-        bulletOnScreen = true;
-    }
-    else if (cmd == "BULLET_DESPAWN") {
-        bulletOnScreen = false;
-        send("bullet despawned");
-    }      
-    else {
+
+    else if (cmd == "ID")
+        game_data.id = stoi(args.at(0));
+    
+    else if (cmd == "BULLET_SPAWN")   
+        bulletOnScreen = true;   
+
+    else if (cmd == "BULLET_DESPAWN") 
+        bulletOnScreen = false; 
+
+    else 
         std::cout << "Received: " << cmd << std::endl;
-    }
 
     //if cmd .includes ("PLAYER)"
     //id = args.stoi(*id index*)
@@ -40,6 +41,13 @@ void MyGame::on_receive(std::string cmd, std::vector<std::string>& args) {
 
 void MyGame::send(std::string message) {
     messages.push_back(message);
+}
+
+void MyGame::HeartBeat() {
+    if (SDL_GetTicks() > nextSendTime) {
+        send("heartbeat, " + std::to_string(game_data.id));
+        nextSendTime = SDL_GetTicks() + 1000;
+    }
 }
 
 void MyGame::input(SDL_Event& event) 
@@ -52,6 +60,7 @@ void MyGame::input(SDL_Event& event)
             send("LMB_DOWN");
             SDL_Delay(100);
             send("LMB_UP");
+            send(std::to_string(game_data.id));
 
             //send(event.type == SDL_MOUSEBUTTONDOWN ? "LMB_DOWN" : "LMB_UP");
         }
@@ -96,6 +105,9 @@ void MyGame::input(SDL_Event& event)
 }
 
 void MyGame::update() {
+
+    HeartBeat();
+    
     player1.y = game_data.player1Y;
     player1.x = game_data.player1X;
     player2.y = game_data.player2Y;
@@ -111,6 +123,8 @@ void MyGame::update() {
     
      bullet.y = game_data.bulletY;
      bullet.x = game_data.bulletX;
+
+ 
 }
 
 void MyGame::render(SDL_Renderer* renderer) {
