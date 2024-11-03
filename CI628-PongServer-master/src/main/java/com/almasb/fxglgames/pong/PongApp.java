@@ -81,6 +81,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
     private BatComponent player1Bat;
     private BarrelComponent p1barrelComponent;
     private BatComponent player2Bat;
+    private BarrelComponent p2barrelComponent;
     //private Entity[] Players;
     private List<Entity> Players;
 
@@ -373,6 +374,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
             //if p1 turn:
             p1barrelComponent.rotateBarrel(mousePosX, mousePosY);
+            p2barrelComponent.rotateBarrel(mousePosX, mousePosY);
             //else:
                 //p2barrelComponent.rotateBarrel(mousePosx, mousePosY);
 
@@ -449,6 +451,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
         player1Bat = player1.getComponent(BatComponent.class);
         p1barrelComponent = player1.getComponent(BarrelComponent.class);
         player2Bat = player2.getComponent(BatComponent.class);
+        p2barrelComponent = player2.getComponent(BarrelComponent.class);
 
         block1 = spawn("block", new SpawnData(600, 340));
         block2 = spawn("block", new SpawnData(420, 220));
@@ -544,11 +547,34 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
             }else{
                 //keyboard
-                if (key.endsWith("_DOWN")) {
-                    getInput().mockKeyPress(KeyCode.valueOf(key.substring(0, 1)));
-                    
-                } else if (key.endsWith("_UP")) {
-                    getInput().mockKeyRelease(KeyCode.valueOf(key.substring(0, 1)));
+                if (key.endsWith("_DOWN"))
+                {
+                    switch(String.valueOf(key.substring(0, 1))){
+                        case("W"):
+                            if((int)connection.getLocalSessionData().getValue("ID") == 0)
+                                player1Bat.up();
+                            else if((int)connection.getLocalSessionData().getValue("ID") == 1)
+                                player2Bat.up();
+                            break;
+                        case("A"):
+                            if((int)connection.getLocalSessionData().getValue("ID") == 0)
+                                player1Bat.left();
+                            else if((int)connection.getLocalSessionData().getValue("ID") == 1)
+                                player2Bat.left();
+                            break;
+                        case("S"):
+                            if((int)connection.getLocalSessionData().getValue("ID") == 0)
+                                player1Bat.down();
+                            else if((int)connection.getLocalSessionData().getValue("ID") == 1)
+                                player2Bat.down();
+                            break;
+                        case("D"):
+                            if((int)connection.getLocalSessionData().getValue("ID") == 0)
+                                player1Bat.right();
+                            else if((int)connection.getLocalSessionData().getValue("ID") == 1)
+                                player2Bat.right();
+                            break;
+                    }
                 }
             }
         });
