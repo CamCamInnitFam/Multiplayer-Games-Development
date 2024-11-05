@@ -102,7 +102,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
         getInput().addAction(new UserAction("Up1") {
             @Override
             protected void onActionBegin() {
-                up();
+                player1Bat.up();
             }
         }, KeyCode.W);
 
@@ -222,7 +222,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
         server.setOnConnected(connection -> { //when a client connects
             boolean hasSetId = false;
-            System.out.println("connected!");
+            System.out.println("Connection Found.");
 
             //loop through all player Entities and check if connected
             //if not - assign id to client and entity
@@ -234,7 +234,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                     Players.get(i).getComponent(BatComponent.class).connected = true;
                     Players.get(i).getComponent(BatComponent.class).id = i;
                     hasSetId = true;
-                    System.out.println("Player Connected");
+                    System.out.println("Player Connected!");
                     break;
                 }
             }
@@ -264,7 +264,6 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             for(Entity player : Players){
                 if(player.getComponent(BatComponent.class).id == connectionID){
                     player.getComponent(BatComponent.class).connected = false;
-                    player.getComponent(BatComponent.class).id = -1;
                     System.out.println("Player Disconnected");
                     break;
                 }
@@ -400,9 +399,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
                     //If not a spectator, make linked player disconnect
                     if(connectionID != -1)
-                    {
                         Players.get(connectionID).getComponent(BatComponent.class).connected = false;
-                    }
                 }
             }
 
@@ -520,7 +517,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
         Arrays.stream(tokens).skip(1).forEach(key -> {
 
             if(key.equals("heartbeat")){
-                connection.getLocalSessionData().setValue("HeartBeatTime", System.currentTimeMillis()+500);
+                connection.getLocalSessionData().setValue("HeartBeatTime", System.currentTimeMillis());
             }
 
             //MOUSE POS = MP
@@ -548,6 +545,9 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             }else{
                 //keyboard
                 if (key.endsWith("_DOWN"))
+                //TODO could do up() down() left() and right() and pass in the connection. Then check connection
+                    //here and provide p1bat or p2bat (tank) movement
+                //TODO change player1Bat to be player1Tank
                 {
                     switch(String.valueOf(key.substring(0, 1))){
                         case("W"):
