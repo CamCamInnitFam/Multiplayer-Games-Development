@@ -24,12 +24,15 @@ void MyGame::on_receive(std::string cmd, std::vector<std::string>& args) {
 
     else if (cmd == "ID")
         game_data.id = stoi(args.at(0));
-    
-    else if (cmd == "BULLET_SPAWN")   
-        bulletOnScreen = true;   
 
-    else if (cmd == "BULLET_DESPAWN") 
-        bulletOnScreen = false; 
+    else if (cmd == "BULLET_SPAWN")
+        bulletOnScreen = true;
+
+    else if (cmd == "BULLET_DESPAWN")
+        bulletOnScreen = false;
+
+    else if (cmd == "*")
+        setCurrentTurn(game_data.id);
 
     else 
         std::cout << "Received: " << cmd << std::endl;
@@ -52,7 +55,10 @@ void MyGame::HeartBeat() {
 
 void MyGame::input(SDL_Event& event) 
 {  
-    int x, y;
+    //Ignore Input if not current turn
+    if (!isCurrentTurn())
+        return;
+
     if (event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) 
     {
         if (event.button.button == 1) { //left click                        
@@ -86,6 +92,15 @@ void MyGame::input(SDL_Event& event)
         send(event.type == SDL_KEYDOWN ? "D_DOWN" : "D_UP");
         break;
 
+        //Turn end
+    case SDLK_SPACE:
+        send("TURN_END");
+        if (game_data.id == 0 && isCurrentTurn())
+            setCurrentTurn(1);
+        if (game_data.id == 1 && isCurrentTurn())
+            setCurrentTurn(0);
+        break;
+
         //USER 2
 
         //up and down
@@ -117,14 +132,12 @@ void MyGame::update() {
     prevY = game_data.cursorY;
     SDL_GetMouseState(&game_data.cursorX, &game_data.cursorY);
 
-    //only send if changed (minimise traffic)
-    if (game_data.cursorX != prevX || game_data.cursorY != prevY)    
+    //only send if changed (minimise traffic) and is current turn
+    if ((game_data.cursorX != prevX || game_data.cursorY != prevY) && isCurrentTurn())    
         send("MP(" + std::to_string(game_data.cursorX) + "." + std::to_string(game_data.cursorY) + ")");
     
-     bullet.y = game_data.bulletY;
-     bullet.x = game_data.bulletX;
-
- 
+    bullet.y = game_data.bulletY;
+    bullet.x = game_data.bulletX;
 }
 
 void MyGame::render(SDL_Renderer* renderer) {
@@ -136,5 +149,18 @@ void MyGame::render(SDL_Renderer* renderer) {
 
     if (bulletOnScreen)
         SDL_RenderDrawRect(renderer, &bullet);
+}
 
+void MyGame::setCurrentTurn(int x) {
+    currentTurn = x;
+}
+
+int MyGame::getCurrentTurn() {
+    return currentTurn;
+}
+
+bool MyGame::isCurrentTurn() {
+    if (currentTurn == game_data.id)
+        return true;   
+    return false;
 }

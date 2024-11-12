@@ -33,14 +33,12 @@ import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.core.math.FXGLMath;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.SpawnData;
-import com.almasb.fxgl.entity.component.Component;
 import com.almasb.fxgl.input.UserAction;
 import com.almasb.fxgl.net.*;
 import com.almasb.fxgl.physics.CollisionHandler;
 import com.almasb.fxgl.physics.HitBox;
 import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.ui.UI;
-import javafx.geometry.Point2D;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
@@ -82,20 +80,18 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
     private BarrelComponent p1barrelComponent;
     private BatComponent player2Bat;
     private BarrelComponent p2barrelComponent;
-    //private Entity[] Players;
     private List<Entity> Players;
-
-    //private
     private Entity block1;
     private Entity block2;
     private Entity AIPlayer; //TODO
-
     private Server<String> server;
 
     int maxBounces = 5;
     int currentBounces = 0;
     int mousePosX = 0;
     int mousePosY = 0;
+    int activeTurn = 0; //0 or 1, -1 for game over?
+    boolean gameOver = false;
 
     @Override
     protected void initInput() {
@@ -371,11 +367,19 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
             server.broadcast(message);
 
-            //if p1 turn:
-            p1barrelComponent.rotateBarrel(mousePosX, mousePosY);
-            p2barrelComponent.rotateBarrel(mousePosX, mousePosY);
-            //else:
-                //p2barrelComponent.rotateBarrel(mousePosx, mousePosY);
+            //TODO list of barrel components, then do barrels[activeTurn].rotateBarrel()
+            //This will allow for multiple tanks at once
+            switch(activeTurn){
+                case 0:
+                    p1barrelComponent.rotateBarrel(mousePosX, mousePosY, 0);
+                    break;
+                case 1:
+                    p2barrelComponent.rotateBarrel(mousePosX, mousePosY, 1);
+                    break;
+                default:
+                    break;
+            }
+
 
             //For all client connections (active and inactive)
             for(Connection connection: server.getConnections())
@@ -475,15 +479,35 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
         //getPhysicsWorld().onEntityRemoved(bullet) THEN activate new turn??? //TODO
 
+        double middlePosX;
+        double middlePosY;
+        double spawnOffset = 55;
+
+
         //must only ever be one bullet
         if(bullet != null)
             if(bullet.isActive())
                 return;
 
-        //CHANGE BASED ON ID SEND IN FROM CLIENT
-        double middlePosX = player1.getCenter().getX();
-        double middlePosY = player1.getCenter().getY();
-        double spawnOffset = 55;
+        switch(activeTurn)
+        {
+            case(0):
+                middlePosX = player1.getCenter().getX();
+                middlePosY = player1.getCenter().getY();
+                break;
+
+            case(1):
+                middlePosX = player2.getCenter().getX();
+                middlePosY = player2.getCenter().getY();
+                break;
+
+            default:
+                middlePosY = 0;
+                middlePosX  = 0;
+                break;
+        }
+
+
 
         //get positions
         double deltaX = mousePosX - middlePosX;
@@ -512,12 +536,36 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
     public void onReceive(Connection<String> connection, String message) {
 
         var tokens = message.split(",");
-        //WILL HAVE TO DEAL WITH IDs  ?
+        int connectionID = connection.getLocalSessionData().getValue("ID");
 
         Arrays.stream(tokens).skip(1).forEach(key -> {
 
-            if(key.equals("heartbeat")){
+            //Receive heartbeat to establish active connection
+            if(key.equals("heartbeat"))
                 connection.getLocalSessionData().setValue("HeartBeatTime", System.currentTimeMillis());
+
+            //Switch Active Turn
+            if(key.equals("TURN_END"))
+            {
+                switch(connectionID)
+                {
+                    case(0):
+                        activeTurn = 1;
+                        for(Connection connect : server.getConnections())
+                        {
+                            if((boolean)connect.getLocalSessionData().getValue("Connected") && (int)connect.getLocalSessionData().getValue("ID") == 1)
+                                connect.send("*"); //TURN START
+                        }
+                        break;
+                    case(1):
+                        activeTurn = 0;
+                        for(Connection connect : server.getConnections())
+                        {
+                            if((boolean)connect.getLocalSessionData().getValue("Connected") && (int)connect.getLocalSessionData().getValue("ID") == 0)
+                                connect.send("*"); //TURN START
+                        }
+                        break;
+                }
             }
 
             //MOUSE POS = MP
@@ -551,27 +599,27 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                 {
                     switch(String.valueOf(key.substring(0, 1))){
                         case("W"):
-                            if((int)connection.getLocalSessionData().getValue("ID") == 0)
+                            if(connectionID == 0)
                                 player1Bat.up();
-                            else if((int)connection.getLocalSessionData().getValue("ID") == 1)
+                            else if(connectionID == 1)
                                 player2Bat.up();
                             break;
                         case("A"):
-                            if((int)connection.getLocalSessionData().getValue("ID") == 0)
+                            if(connectionID == 0)
                                 player1Bat.left();
-                            else if((int)connection.getLocalSessionData().getValue("ID") == 1)
+                            else if(connectionID == 1)
                                 player2Bat.left();
                             break;
                         case("S"):
-                            if((int)connection.getLocalSessionData().getValue("ID") == 0)
+                            if(connectionID == 0)
                                 player1Bat.down();
-                            else if((int)connection.getLocalSessionData().getValue("ID") == 1)
+                            else if(connectionID == 1)
                                 player2Bat.down();
                             break;
                         case("D"):
-                            if((int)connection.getLocalSessionData().getValue("ID") == 0)
+                            if(connectionID == 0)
                                 player1Bat.right();
-                            else if((int)connection.getLocalSessionData().getValue("ID") == 1)
+                            else if(connectionID == 1)
                                 player2Bat.right();
                             break;
                     }

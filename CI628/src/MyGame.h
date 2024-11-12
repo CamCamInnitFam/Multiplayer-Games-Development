@@ -34,6 +34,7 @@ class MyGame {
         int prevX, prevY;
         bool bulletOnScreen = false;
         Uint32 nextSendTime = SDL_GetTicks();
+        int currentTurn = 0; //TODO have timer for turn and will auto send (END_TURN) to server
 
         void on_receive(std::string message, std::vector<std::string>& args);
         void send(std::string message);
@@ -41,6 +42,9 @@ class MyGame {
         void update();
         void render(SDL_Renderer* renderer);
         void HeartBeat();
+        int getCurrentTurn();
+        void setCurrentTurn(int);
+        bool isCurrentTurn();
 };
 
 #endif

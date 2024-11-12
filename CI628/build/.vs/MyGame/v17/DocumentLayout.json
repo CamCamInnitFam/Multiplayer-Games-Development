@@ -29,9 +29,10 @@
               "RelativeDocumentMoniker": "..\\src\\MyGame.h",
               "ToolTip": "E:\\Uni work\\Multiplayer Games Development\\CI628\\src\\MyGame.h",
               "RelativeToolTip": "..\\src\\MyGame.h",
-              "ViewState": "AgIAAAEAAAAAAAAAAAAUwCwAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAC4AAAAdAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2024-10-31T14:10:13.586Z"
+              "WhenOpened": "2024-10-31T14:10:13.586Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -41,7 +42,7 @@
               "RelativeDocumentMoniker": "..\\src\\MyGame.cpp",
               "ToolTip": "E:\\Uni work\\Multiplayer Games Development\\CI628\\src\\MyGame.cpp",
               "RelativeToolTip": "..\\src\\MyGame.cpp",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAEoAAAAqAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACQAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2024-10-23T19:20:00.732Z",
               "EditorCaption": ""
@@ -54,9 +55,10 @@
               "RelativeDocumentMoniker": "..\\src\\Main.cpp",
               "ToolTip": "E:\\Uni work\\Multiplayer Games Development\\CI628\\src\\Main.cpp",
               "RelativeToolTip": "..\\src\\Main.cpp",
-              "ViewState": "AgIAAG4AAAAAAAAAAAAMwLEAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAALEAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2024-10-23T19:19:59.424Z"
+              "WhenOpened": "2024-10-23T19:19:59.424Z",
+              "EditorCaption": ""
             }
           ]
         }
