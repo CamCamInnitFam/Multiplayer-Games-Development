@@ -54,6 +54,9 @@ public class BatComponent extends Component {
     //physics.overwriteAngle(entity.getRotation() + 90);
 
     public void up() {
+        if(entity.getY() <= 0)
+            return;
+
         for(Entity block : FXGL.getGameWorld().getEntitiesByType(EntityType.BLOCK)){
 
             if(entity.isColliding(block)){
@@ -73,6 +76,9 @@ public class BatComponent extends Component {
     }
 
     public void down() {
+        if(entity.getBottomY() >= 840)
+            return;
+
         for(Entity block : FXGL.getGameWorld().getEntitiesByType(EntityType.BLOCK)){
             if(entity.isColliding(block)){
 
@@ -89,6 +95,9 @@ public class BatComponent extends Component {
     }
 
     public void right(){
+        if(entity.getRightX() >= 1200)
+            return;
+
         for(Entity block : FXGL.getGameWorld().getEntitiesByType(EntityType.BLOCK)) {
             if (entity.isColliding(block)){
 
@@ -111,6 +120,9 @@ public class BatComponent extends Component {
     }
 
     public void left(){
+        if(entity.getX() <= 0)
+            return;
+
         for(Entity block : FXGL.getGameWorld().getEntitiesByType(EntityType.BLOCK)){
             if(entity.isColliding(block)){
 

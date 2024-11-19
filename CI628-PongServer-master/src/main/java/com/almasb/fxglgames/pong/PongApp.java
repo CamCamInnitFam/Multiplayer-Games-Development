@@ -70,7 +70,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
         settings.setFontUI("inkTank.ttf");
         settings.setApplicationMode(ApplicationMode.DEBUG);
         settings.setWidth(1200);
-        settings.setHeight(800);
+        settings.setHeight(840);
     }
 
     private Entity player1;
@@ -86,6 +86,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
     private Entity AIPlayer; //TODO
     private Server<String> server;
 
+    //TODO in init game vars
     int maxBounces = 5;
     int currentBounces = 0;
     int mousePosX = 0;
@@ -95,97 +96,6 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
     @Override
     protected void initInput() {
-        getInput().addAction(new UserAction("Up1") {
-            @Override
-            protected void onActionBegin() {
-                player1Bat.up();
-            }
-        }, KeyCode.W);
-
-        getInput().addAction(new UserAction("Down1") {
-            @Override
-            protected void onActionBegin() {
-                player1Bat.down();
-            }
-
-            @Override
-            protected void onActionEnd() {
-                player1Bat.stop();
-            }
-        }, KeyCode.S);
-
-        getInput().addAction(new UserAction("Right1") {
-            @Override
-            protected void onActionBegin() {
-                player1Bat.right();
-            }
-
-            @Override
-            protected void onActionEnd() {
-                player1Bat.stop();
-            }
-        }, KeyCode.D);
-
-        getInput().addAction(new UserAction("Left1") {
-            @Override
-            protected void onActionBegin() {
-                player1Bat.left();
-            }
-
-            @Override
-            protected void onActionEnd() {
-                player1Bat.stop();
-            }
-        }, KeyCode.A);
-
-        getInput().addAction(new UserAction("Up2") {
-            @Override
-            protected void onActionBegin() {
-                player2Bat.up();
-            }
-
-            @Override
-            protected void onActionEnd() {
-                player2Bat.stop();
-            }
-        }, KeyCode.I);
-
-        getInput().addAction(new UserAction("Down2") {
-            @Override
-            protected void onActionBegin() {
-                player2Bat.down();
-            }
-
-            @Override
-            protected void onActionEnd() {
-                player2Bat.stop();
-            }
-        }, KeyCode.K);
-
-        getInput().addAction(new UserAction("Left2") {
-            @Override
-            protected void onActionBegin() {
-                player2Bat.left();
-            }
-
-            @Override
-            protected void onActionEnd() {
-                player2Bat.stop();
-            }
-        }, KeyCode.J);
-
-        getInput().addAction(new UserAction("Right2") {
-            @Override
-            protected void onActionBegin() {
-                player2Bat.right();
-            }
-
-            @Override
-            protected void onActionEnd() {
-                player2Bat.stop();
-            }
-        }, KeyCode.L);
-
         getInput().addAction(new UserAction("Shoot")
         {
             @Override
@@ -444,6 +354,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
     private void initGameObjects() {
        // bullet = spawn("bullet", getAppWidth() / 2 - 5, getAppHeight() / 2 - 5);
         //could spawn bullet but make this invisible or inactive, then when the player clicks, it is made visible and velocity is put on it and position etc...
+        //for int i = 0; i < playerCount ; spawn("tank") if i == .put etc... max is 4?
         player1 = spawn("tank", new SpawnData(getAppWidth() / 4, getAppHeight() / 2).put("isPlayer", true));
         player2 = spawn("tank", new SpawnData(3 * getAppWidth() / 4, getAppHeight() / 2).put("isPlayer", false));
         Players.add(player1);
@@ -506,8 +417,6 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                 middlePosX  = 0;
                 break;
         }
-
-
 
         //get positions
         double deltaX = mousePosX - middlePosX;
@@ -573,7 +482,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             if(key.startsWith("MP"))
             {
                 String coordinates = key.substring(3, key.length()-1);
-                if(coordinates.split("\\.").length ==2)
+                if(coordinates.split("\\.").length == 2)
                 {
                     mousePosX = Integer.parseInt(coordinates.split("\\.")[0]);
                     mousePosY = Integer.parseInt(coordinates.split("\\.")[1]);
