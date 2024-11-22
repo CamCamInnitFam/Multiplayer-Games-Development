@@ -1,4 +1,10 @@
 #include "SDL_net.h"
+#include <SDL.h>
+#include <SDL_ttf.h>
+#include <stdio.h>
+#include <string>
+#include <Windows.h>
+
 
 #include "MyGame.h"
 
@@ -8,8 +14,11 @@ const char* IP_NAME = "localhost";
 const Uint16 PORT = 55555;
 
 bool is_running = true;
+bool is_in_lobby = true;
+bool is_connecting = true;
 
 MyGame* game = new MyGame();
+TCPsocket overallSocket;
 
 static int on_receive(void* socket_ptr) {
     TCPsocket socket = (TCPsocket)socket_ptr;
@@ -116,7 +125,7 @@ int run_game() {
     SDL_Window* window = SDL_CreateWindow(
         "Multiplayer Tankz Client",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        1200, 800,
+        1200, 840,
         SDL_WINDOW_SHOWN
     );
 
@@ -137,6 +146,151 @@ int run_game() {
     return 0;
 }
 
+// Function to render text
+SDL_Texture* renderText(const char* message, TTF_Font* font, SDL_Color color, SDL_Renderer* renderer) {
+    SDL_Surface* surface = TTF_RenderText_Solid(font, message, color);
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    return texture;
+}
+
+bool tryConnection(char* p_ip) {
+    IPaddress ip;
+
+    // Resolve host (ip name + port) into an IPaddress type
+    if (SDLNet_ResolveHost(&ip, p_ip, PORT) == -1) {
+        printf("SDLNet_ResolveHost: %s\n", SDLNet_GetError());
+        printf("No Server found.");
+        return false;
+    }
+
+    // Open the connection to the server
+    overallSocket = SDLNet_TCP_Open(&ip);
+
+    if (!overallSocket) {
+        printf("SDLNet_TCP_Open: %s\n", SDLNet_GetError());
+        return false;
+    }
+
+    return true;
+}
+
+void load_connection_screen(SDL_Renderer* renderer, TTF_Font* font) 
+{
+    SDL_Color white = { 255, 255, 255, 255 };
+    SDL_Color green = { 0, 255, 0, 255 };
+    SDL_Color red = { 255, 0 , 0, 255 };
+
+    char ipBuffer[256] = "localhost"; 
+    char portBuffer[10] = "55555";
+    int ipLength = strlen(ipBuffer); //max 256
+    int portLength = strlen(portBuffer); //max 10
+    bool typingIP = true;  // Start by typing the IP
+
+    SDL_StartTextInput(); //allow text input from SDL
+
+    bool quit = false;
+    SDL_Event e;
+
+    while (!quit) 
+    {
+        //Take input
+        while (SDL_PollEvent(&e)) 
+        {
+            if (e.type == SDL_QUIT) {
+                quit = true;
+                break;
+            }
+            
+            if (e.type == SDL_TEXTINPUT) {
+                if (typingIP && ipLength < sizeof(ipBuffer) - 1) {
+                    strcat(ipBuffer, e.text.text);
+                    ipLength += strlen(e.text.text);
+                }
+                else if (!typingIP && portLength < sizeof(portBuffer) - 1) {
+                    strcat(portBuffer, e.text.text);
+                    portLength += strlen(e.text.text);
+                }
+            }
+            if (e.type == SDL_KEYDOWN) {
+                if (e.key.keysym.sym == SDLK_BACKSPACE) {
+                    if (typingIP && ipLength > 0) {
+                        ipBuffer[--ipLength] = '\0';
+                    }
+                    else if (!typingIP && portLength > 0) {
+                        portBuffer[--portLength] = '\0';
+                    }
+                }
+                if (e.key.keysym.sym == SDLK_TAB) {
+                    typingIP = !typingIP;
+                }
+                if (e.key.keysym.sym == SDLK_RETURN) {
+                    if(tryConnection(ipBuffer)) // Attempt connection with entered IP (port will be default for now)
+                        quit = true;  
+                }
+            }
+        }
+
+        // Render the screen
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderClear(renderer);
+
+        // Display the IP and Port input fields
+        SDL_Texture* ipLabel = renderText("IP Address ", font, white, renderer);
+        SDL_Texture* ipText = renderText(ipBuffer, font, typingIP ? green : white, renderer);
+        SDL_Texture* portLabel = renderText("Port ", font, white, renderer);
+        SDL_Texture* portText = renderText(portBuffer, font, typingIP ? white : green, renderer);
+        SDL_Texture* connectText = renderText("Press Enter to Connect", font, green, renderer);
+
+        //int widthAddress = 175;
+        //int widthPort = 150;
+
+
+
+        //Change width of text boxes based on input length
+        int widthAddress = 0;
+        int widthPort = 0;
+
+        for (int i = 0; i < strlen(ipBuffer); i++) {
+            widthAddress += 15;
+        }
+
+        for (int i = 0; i < strlen(portBuffer); i++) {
+            widthPort += 20;
+        }
+
+      
+
+        SDL_Rect ipLabelRect = { 100, 100, 200, 50 };
+        SDL_Rect ipTextRect = { 350, 100, widthAddress, 50 };
+        SDL_Rect portLabelRect = { 100, 200, 100, 50 };
+        SDL_Rect portTextRect = { 350, 200, widthPort, 50 };
+        SDL_Rect connectRect = { 100, 300, 400, 50 };
+
+        SDL_RenderCopy(renderer, ipLabel, NULL, &ipLabelRect);
+        SDL_RenderCopy(renderer, ipText, NULL, &ipTextRect);
+        SDL_RenderCopy(renderer, portLabel, NULL, &portLabelRect);
+        SDL_RenderCopy(renderer, portText, NULL, &portTextRect);
+        SDL_RenderCopy(renderer, connectText, NULL, &connectRect);
+
+        SDL_RenderPresent(renderer);
+
+        SDL_DestroyTexture(ipLabel);
+        SDL_DestroyTexture(ipText);
+        SDL_DestroyTexture(portLabel);
+        SDL_DestroyTexture(portText);
+        SDL_DestroyTexture(connectText);
+    }
+
+    SDL_StopTextInput();  // Stop text input
+   
+}
+
+void load_lobby() {
+
+}
+
+
 int main(int argc, char** argv) {
 
     // Initialize SDL
@@ -151,31 +305,50 @@ int main(int argc, char** argv) {
         exit(2);
     }
 
-    IPaddress ip;
-
-    // Resolve host (ip name + port) into an IPaddress type
-    if (SDLNet_ResolveHost(&ip, IP_NAME, PORT) == -1) {
-        printf("SDLNet_ResolveHost: %s\n", SDLNet_GetError());
+    //Initialise SDL_ttf
+    if (TTF_Init() == 1) {
+        printf("SDL_ttf could not initialise! TTF_Error: %s\n", SDL_GetError());
         exit(3);
     }
 
-    // Open the connection to the server
-    TCPsocket socket = SDLNet_TCP_Open(&ip);
-
-    if (!socket) {
-        printf("SDLNet_TCP_Open: %s\n", SDLNet_GetError());
+    // Create window
+    SDL_Window* window = SDL_CreateWindow("Connection Screen", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 700, 500, SDL_WINDOW_SHOWN);
+    if (!window) {
+        printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
         exit(4);
     }
 
-    SDL_CreateThread(on_receive, "ConnectionReceiveThread", (void*)socket);
-    SDL_CreateThread(on_send, "ConnectionSendThread", (void*)socket);
+    // Create renderer
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    if (!renderer) {
+        printf("Renderer could not be created! SDL_Error: %s\n", SDL_GetError());
+        exit(5);
+    }
 
+    // Load font
+    TTF_Font* font = TTF_OpenFont("../assets/fonts/Hey Comic.ttf", 25);
+    if (!font) {
+        printf("Failed to load font! TTF_Error: %s\n", TTF_GetError());
+        exit(6);
+    }
+
+    load_connection_screen(renderer, font);
+    SDL_DestroyWindow(window); //destroy connection screen after connected
+    SDL_DestroyRenderer(renderer); //destroy renderer as new one is created in run_game
+    
+
+    
+
+    SDL_CreateThread(on_receive, "ConnectionReceiveThread", (void*)overallSocket);
+    SDL_CreateThread(on_send, "ConnectionSendThread", (void*)overallSocket);
+
+    load_lobby();
     run_game();
 
     delete game;
 
     // Close connection to the server
-    SDLNet_TCP_Close(socket);
+    SDLNet_TCP_Close(overallSocket);
 
     // Shutdown SDL_net
     SDLNet_Quit();

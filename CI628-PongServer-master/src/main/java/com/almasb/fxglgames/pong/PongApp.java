@@ -93,6 +93,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
     int mousePosY = 0;
     int activeTurn = 0; //0 or 1, -1 for game over?
     boolean gameOver = false;
+    boolean isInLobby = true;
 
     @Override
     protected void initInput() {

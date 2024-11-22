@@ -121,7 +121,7 @@
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <ImportLibrary>E:/Uni work/Multiplayer Games Development/CI628/build/Debug/MyGame.lib</ImportLibrary>
       <ProgramDataBaseFile>E:/Uni work/Multiplayer Games Development/CI628/build/Debug/MyGame.pdb</ProgramDataBaseFile>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
