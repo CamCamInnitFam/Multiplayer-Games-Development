@@ -146,6 +146,9 @@ void MyGame::render(SDL_Renderer* renderer) {
     SDL_RenderDrawRect(renderer, &player2);
     SDL_RenderDrawRect(renderer, &block1);
     SDL_RenderDrawRect(renderer, &block2);
+    SDL_RenderDrawRect(renderer, &block3);
+    SDL_RenderDrawRect(renderer, &block4);
+    SDL_RenderDrawRect(renderer, &block5);
 
     if (bulletOnScreen)
         SDL_RenderDrawRect(renderer, &bullet);

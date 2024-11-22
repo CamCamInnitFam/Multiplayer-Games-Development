@@ -17,6 +17,14 @@ bool is_running = true;
 bool is_in_lobby = true;
 bool is_connecting = true;
 
+struct connectionData 
+{
+    boolean success;
+    const char* message;
+
+    connectionData(boolean a, const char* b) : success(a), message(b) {}
+};
+
 MyGame* game = new MyGame();
 TCPsocket overallSocket;
 
@@ -154,14 +162,22 @@ SDL_Texture* renderText(const char* message, TTF_Font* font, SDL_Color color, SD
     return texture;
 }
 
-bool tryConnection(char* p_ip) {
+connectionData tryConnection(char* p_ip, char* port) {
     IPaddress ip;
 
+    //char * to string
+    std::string newStr = std::string(port);
+    //string to int
+    int newInt = stoi(newStr);
+    //int to Uint16
+    Uint16 newUint16 = static_cast<UINT16>(newInt);
+
     // Resolve host (ip name + port) into an IPaddress type
-    if (SDLNet_ResolveHost(&ip, p_ip, PORT) == -1) {
+    if (SDLNet_ResolveHost(&ip, p_ip, newUint16) == -1) {
         printf("SDLNet_ResolveHost: %s\n", SDLNet_GetError());
         printf("No Server found.");
-        return false;
+        return connectionData(false, SDLNet_GetError());
+        
     }
 
     // Open the connection to the server
@@ -169,10 +185,10 @@ bool tryConnection(char* p_ip) {
 
     if (!overallSocket) {
         printf("SDLNet_TCP_Open: %s\n", SDLNet_GetError());
-        return false;
+        return connectionData(false, SDLNet_GetError());
     }
 
-    return true;
+    return connectionData(true, "");
 }
 
 void load_connection_screen(SDL_Renderer* renderer, TTF_Font* font) 
@@ -186,6 +202,8 @@ void load_connection_screen(SDL_Renderer* renderer, TTF_Font* font)
     int ipLength = strlen(ipBuffer); //max 256
     int portLength = strlen(portBuffer); //max 10
     bool typingIP = true;  // Start by typing the IP
+    bool hasErrored = false;
+    std::string connectionString = " ";
 
     SDL_StartTextInput(); //allow text input from SDL
 
@@ -225,8 +243,20 @@ void load_connection_screen(SDL_Renderer* renderer, TTF_Font* font)
                     typingIP = !typingIP;
                 }
                 if (e.key.keysym.sym == SDLK_RETURN) {
-                    if(tryConnection(ipBuffer)) // Attempt connection with entered IP (port will be default for now)
-                        quit = true;  
+                    connectionData result = tryConnection(ipBuffer, portBuffer);
+                    if (result.success) {
+                        // Attempt connection with entered IP (port will be default for now)
+                        quit = true;
+                        hasErrored = false;
+                        connectionString = "Success! Connecting now...";
+                    }
+                    else {
+                        hasErrored = true;
+                        connectionString = result.message;
+                        if (connectionString.empty())
+                            connectionString = "No server found!";
+                    }
+                        
                 }
             }
         }
@@ -241,11 +271,10 @@ void load_connection_screen(SDL_Renderer* renderer, TTF_Font* font)
         SDL_Texture* portLabel = renderText("Port ", font, white, renderer);
         SDL_Texture* portText = renderText(portBuffer, font, typingIP ? white : green, renderer);
         SDL_Texture* connectText = renderText("Press Enter to Connect", font, green, renderer);
+        SDL_Texture* errorText = renderText(connectionString.c_str(), font, hasErrored ? red : green, renderer);
 
         //int widthAddress = 175;
         //int widthPort = 150;
-
-
 
         //Change width of text boxes based on input length
         int widthAddress = 0;
@@ -257,21 +286,21 @@ void load_connection_screen(SDL_Renderer* renderer, TTF_Font* font)
 
         for (int i = 0; i < strlen(portBuffer); i++) {
             widthPort += 20;
-        }
-
-      
+        }      
 
         SDL_Rect ipLabelRect = { 100, 100, 200, 50 };
         SDL_Rect ipTextRect = { 350, 100, widthAddress, 50 };
         SDL_Rect portLabelRect = { 100, 200, 100, 50 };
         SDL_Rect portTextRect = { 350, 200, widthPort, 50 };
         SDL_Rect connectRect = { 100, 300, 400, 50 };
+        SDL_Rect errorRect = { 100, 400, 350, 60 };
 
         SDL_RenderCopy(renderer, ipLabel, NULL, &ipLabelRect);
         SDL_RenderCopy(renderer, ipText, NULL, &ipTextRect);
         SDL_RenderCopy(renderer, portLabel, NULL, &portLabelRect);
         SDL_RenderCopy(renderer, portText, NULL, &portTextRect);
         SDL_RenderCopy(renderer, connectText, NULL, &connectRect);
+        SDL_RenderCopy(renderer, errorText, NULL, &errorRect);
 
         SDL_RenderPresent(renderer);
 
@@ -280,10 +309,10 @@ void load_connection_screen(SDL_Renderer* renderer, TTF_Font* font)
         SDL_DestroyTexture(portLabel);
         SDL_DestroyTexture(portText);
         SDL_DestroyTexture(connectText);
+        SDL_DestroyTexture(errorText);
     }
 
-    SDL_StopTextInput();  // Stop text input
-   
+    SDL_StopTextInput();  // Stop text input  
 }
 
 void load_lobby() {
@@ -334,10 +363,7 @@ int main(int argc, char** argv) {
 
     load_connection_screen(renderer, font);
     SDL_DestroyWindow(window); //destroy connection screen after connected
-    SDL_DestroyRenderer(renderer); //destroy renderer as new one is created in run_game
-    
-
-    
+    SDL_DestroyRenderer(renderer); //destroy renderer as new one is created in run_game   
 
     SDL_CreateThread(on_receive, "ConnectionReceiveThread", (void*)overallSocket);
     SDL_CreateThread(on_send, "ConnectionSendThread", (void*)overallSocket);

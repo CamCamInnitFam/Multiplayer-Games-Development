@@ -25,8 +25,11 @@ class MyGame {
         SDL_Rect player1 = { 0, 0, 60, 60 };
         SDL_Rect player2 = { 0, 0, 60, 60 };
         SDL_Rect bullet = { 0, 0, 8, 8 };
-        SDL_Rect block1 = { 600, 340, 60, 120 };
-        SDL_Rect block2 = { 420,220,60, 120};
+        SDL_Rect block1 = { 600, 380, 60, 120 };
+        SDL_Rect block2 = { 420, 80, 60, 120};
+        SDL_Rect block3 = { 780, 80,  60, 120};
+        SDL_Rect block4 = { 420, 620, 60, 120 };
+        SDL_Rect block5 = { 780, 620, 60, 120 };
         
 
     public:

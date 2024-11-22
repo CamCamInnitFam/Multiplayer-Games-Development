@@ -83,6 +83,9 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
     private List<Entity> Players;
     private Entity block1;
     private Entity block2;
+    private Entity block3;
+    private Entity block4;
+    private Entity block5;
     private Entity AIPlayer; //TODO
     private Server<String> server;
 
@@ -114,7 +117,6 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
     protected void initGame() {
         Writers.INSTANCE.addTCPWriter(String.class, outputStream -> new MessageWriterS(outputStream));
         Readers.INSTANCE.addTCPReader(String.class, in -> new MessageReaderS(in));
-
         Players = new ArrayList<>();
 
         //Set up world before server?
@@ -356,8 +358,8 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
        // bullet = spawn("bullet", getAppWidth() / 2 - 5, getAppHeight() / 2 - 5);
         //could spawn bullet but make this invisible or inactive, then when the player clicks, it is made visible and velocity is put on it and position etc...
         //for int i = 0; i < playerCount ; spawn("tank") if i == .put etc... max is 4?
-        player1 = spawn("tank", new SpawnData(getAppWidth() / 4, getAppHeight() / 2).put("isPlayer", true));
-        player2 = spawn("tank", new SpawnData(3 * getAppWidth() / 4, getAppHeight() / 2).put("isPlayer", false));
+        player1 = spawn("tank", new SpawnData(getAppWidth() / 4 - 120, getAppHeight() / 2 +20).put("isPlayer", true));
+        player2 = spawn("tank", new SpawnData(3 * getAppWidth() / 4 + 80, getAppHeight() / 2 +20).put("isPlayer", false));
         Players.add(player1);
         Players.add(player2);
 
@@ -366,8 +368,11 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
         player2Bat = player2.getComponent(BatComponent.class);
         p2barrelComponent = player2.getComponent(BarrelComponent.class);
 
-        block1 = spawn("block", new SpawnData(600, 340));
-        block2 = spawn("block", new SpawnData(420, 220));
+        block1 = spawn("block", new SpawnData(600, 380));
+        block2 = spawn("block", new SpawnData(420, 80));
+        block3 = spawn("block", new SpawnData(780, 80));
+        block4 = spawn("block", new SpawnData(420, 620));
+        block5 = spawn("block", new SpawnData(780, 620));
     }
 
     private void playHitAnimation(Entity bat) {
