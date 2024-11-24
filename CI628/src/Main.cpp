@@ -14,8 +14,10 @@ const char* IP_NAME = "localhost";
 const Uint16 PORT = 55555;
 
 bool is_running = true;
-bool is_in_lobby = true;
+bool game_started = false;
 bool is_connecting = true;
+bool has_made_connection = false;
+int numConnections = 1;
 
 struct connectionData 
 {
@@ -59,10 +61,18 @@ static int on_receive(void* socket_ptr) {
 
         game->on_receive(cmd, args);
 
-        if (cmd == "exit") {
-            break;
+        if (cmd == "CONNECTEVENT") {
+            numConnections = stoi(args.at(0));
+            std::cout << "connectevent ";
+            std::cout << numConnections;
         }
-
+        
+        if (cmd == "GAME_START") 
+            game_started = true;
+        
+        if (cmd == "exit") 
+            break;
+        
     } while (received > 0 && is_running);
 
     return 0;
@@ -176,11 +186,10 @@ connectionData tryConnection(char* p_ip, char* port) {
     if (SDLNet_ResolveHost(&ip, p_ip, newUint16) == -1) {
         printf("SDLNet_ResolveHost: %s\n", SDLNet_GetError());
         printf("No Server found.");
-        return connectionData(false, SDLNet_GetError());
-        
+        return connectionData(false, SDLNet_GetError());       
     }
 
-    // Open the connection to the server
+    //Open the connection to the server
     overallSocket = SDLNet_TCP_Open(&ip);
 
     if (!overallSocket) {
@@ -188,7 +197,7 @@ connectionData tryConnection(char* p_ip, char* port) {
         return connectionData(false, SDLNet_GetError());
     }
 
-    return connectionData(true, "");
+    return connectionData(true, " ");
 }
 
 void load_connection_screen(SDL_Renderer* renderer, TTF_Font* font) 
@@ -243,20 +252,20 @@ void load_connection_screen(SDL_Renderer* renderer, TTF_Font* font)
                     typingIP = !typingIP;
                 }
                 if (e.key.keysym.sym == SDLK_RETURN) {
+                    // Attempt connection with entered IP
                     connectionData result = tryConnection(ipBuffer, portBuffer);
-                    if (result.success) {
-                        // Attempt connection with entered IP (port will be default for now)
+                    if (result.success) {                       
                         quit = true;
                         hasErrored = false;
                         connectionString = "Success! Connecting now...";
+                        has_made_connection = true;
                     }
                     else {
                         hasErrored = true;
                         connectionString = result.message;
                         if (connectionString.empty())
                             connectionString = "No server found!";
-                    }
-                        
+                    }                        
                 }
             }
         }
@@ -315,8 +324,53 @@ void load_connection_screen(SDL_Renderer* renderer, TTF_Font* font)
     SDL_StopTextInput();  // Stop text input  
 }
 
-void load_lobby() {
+void load_lobby(SDL_Renderer* renderer, TTF_Font* font) 
+{
+    std::cout << "in lobby";
 
+    // Render the screen
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
+    SDL_StartTextInput();
+    SDL_Event e;
+    boolean inLobby = true;
+
+    SDL_Color white = { 255, 255, 255, 255 };
+   
+    while (inLobby && !game_started) 
+    {
+        game->HeartBeat();
+        while (SDL_PollEvent(&e))
+        {
+            if (e.type == SDL_QUIT) {
+                inLobby = false;
+                break;
+            }
+            if (e.type == SDL_KEYDOWN) {                
+                if (e.key.keysym.sym == SDLK_RETURN) 
+                {
+                    //Exit lobby if 2 or more connections. Only enabled for p1.
+                    if (numConnections >= 2 && game->getPlayerId() == 0)
+                    {
+                        game->send("EXIT_LOBBY");
+                        inLobby = false;
+                        game_started = true;
+                    }                   
+                }
+            }
+        }
+        
+        // Render the screen
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderClear(renderer);
+        
+        SDL_Texture* lobbyLabel = renderText("In the Lobby!", font, white, renderer);
+        SDL_Rect lobbyLabelRect = { 100, 100, 200, 50 };
+        SDL_RenderCopy(renderer, lobbyLabel, NULL, &lobbyLabelRect);
+        SDL_RenderPresent(renderer);
+        SDL_DestroyTexture(lobbyLabel);
+    }
+    SDL_StopTextInput(); 
 }
 
 
@@ -360,22 +414,34 @@ int main(int argc, char** argv) {
         printf("Failed to load font! TTF_Error: %s\n", TTF_GetError());
         exit(6);
     }
+   
+    load_connection_screen(renderer, font); 
+    if (has_made_connection) 
+    {       
+        SDL_Thread* recvThread = SDL_CreateThread(on_receive, "ConnectionReceiveThread", (void*)overallSocket);
+        SDL_Thread* sendThread = SDL_CreateThread(on_send, "ConnectionSendThread", (void*)overallSocket);
 
-    load_connection_screen(renderer, font);
-    SDL_DestroyWindow(window); //destroy connection screen after connected
-    SDL_DestroyRenderer(renderer); //destroy renderer as new one is created in run_game   
+        SDL_SetWindowTitle(window, "Lobby");
+        load_lobby(renderer, font);
 
-    SDL_CreateThread(on_receive, "ConnectionReceiveThread", (void*)overallSocket);
-    SDL_CreateThread(on_send, "ConnectionSendThread", (void*)overallSocket);
+        if (game_started) {
+            SDL_DestroyWindow(window); //destroy screen for game screen
+            SDL_DestroyRenderer(renderer); //destroy renderer as new one is created in run_game
+            run_game();
+        }
 
-    load_lobby();
-    run_game();
-
+        is_running = false;
+        int threadReturnValue;
+        std::cout << "waiting for threads to exit...";
+        SDL_WaitThread(recvThread, &threadReturnValue);
+        SDL_WaitThread(sendThread, &threadReturnValue);
+    }
+   
     delete game;
-
+      
     // Close connection to the server
     SDLNet_TCP_Close(overallSocket);
-
+    
     // Shutdown SDL_net
     SDLNet_Quit();
 

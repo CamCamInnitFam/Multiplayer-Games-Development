@@ -17,6 +17,7 @@ static struct GameData {
     int cursorX = 0;
     int cursorY = 0;
     int id = -1;
+    float bulletVelocityX, bulletVelocityY;
 } game_data;
 
 class MyGame {
@@ -35,9 +36,15 @@ class MyGame {
     public:
         std::vector<std::string> messages;
         int prevX, prevY;
+        float predictedX, predictedY;
         bool bulletOnScreen = false;
         Uint32 nextSendTime = SDL_GetTicks();
+        Uint32 lastFrameTime = SDL_GetTicks();
+        Uint32 lastMessageTime;
         int currentTurn = 0; //TODO have timer for turn and will auto send (END_TURN) to server
+        float interpolationTime = 0.0f;
+        bool initialSync = true;
+        int numConnectedClients = 1;
 
         void on_receive(std::string message, std::vector<std::string>& args);
         void send(std::string message);
@@ -48,6 +55,10 @@ class MyGame {
         int getCurrentTurn();
         void setCurrentTurn(int);
         bool isCurrentTurn();
+        void PredictBulletPosition(float delta);
+        void Interpolate(float delta);
+        void syncPlayerPos();
+        int getPlayerId();
 };
 
 #endif
