@@ -37,12 +37,14 @@ import javafx.geometry.Point2D;
 import java.awt.*;
 import java.time.Duration;
 
+import static com.almasb.fxgl.dsl.FXGL.getAppHeight;
+import static com.almasb.fxgl.dsl.FXGL.getAppWidth;
+
 /**
  * @author Almas Baimagambetov (AlmasB) (almaslvl@gmail.com)
  */
 public class BatComponent extends Component {
 
-    //private static final double BAT_SPEED = 420;
     private static final double TANK_MOVEMENT = 60; //was 40
     private boolean isColliding = false;
     public int id = -1;
@@ -149,11 +151,27 @@ public class BatComponent extends Component {
         physics.setLinearVelocity(0, 0);
     }
 
-    public void shoot()
-    {
-        //Spawn bullet?
-        //any action related to shooting a bullet?
-        //places player back a little and then forward to mimic recoil?
 
+    public void reset(){
+
+        //Reset Positions
+        Point2D newpoint = new Point2D(0,0);
+        switch(id){
+            case(0):
+                newpoint = new Point2D((FXGL.getAppWidth() / 4 - 120),(FXGL.getAppHeight() / 2 +20));
+                physics.overwritePosition(newpoint);
+                //physics.overwriteAngle(0);
+                break;
+            case(1):
+                newpoint = new Point2D((3 * FXGL.getAppWidth() / 4 + 80), (FXGL.getAppHeight() / 2 +20));
+                //physics.overwriteAngle(0);
+                break;
+        }
+        physics.overwritePosition(newpoint);
+
+        //Reset ID & connected
+        id = -1;
+        connected = false;
     }
+
 }

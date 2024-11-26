@@ -34,11 +34,17 @@ void MyGame::on_receive(std::string cmd, std::vector<std::string>& args) {
         game_data.bulletY = stof(args.at(3));
     }
         
-    else if (cmd == "BULLET_DESPAWN")
+    else if (cmd == "BULLET_DESPAWN") {
         bulletOnScreen = false;
+        std::cout << "Recieved: " << cmd << std::endl;
+    }
+        
 
-    else if (cmd == "*")
-        setCurrentTurn(game_data.id);    
+    else if (cmd == "*") {
+        setCurrentTurn(game_data.id);
+        bulletOnScreen = false;
+    }
+           
 
     else if (cmd == "CONNECTEVENT") {
         
@@ -189,6 +195,8 @@ void MyGame::PredictBulletPosition(float delta) {
     int serverPositionY = game_data.bulletY;
     predictedX = serverPositionX + game_data.bulletVelocityX ;
     predictedY = serverPositionY + game_data.bulletVelocityY ;
+
+    //predictedX = bullet.x + vx * delta ??
 }
 
 void MyGame::Interpolate(float delta) {

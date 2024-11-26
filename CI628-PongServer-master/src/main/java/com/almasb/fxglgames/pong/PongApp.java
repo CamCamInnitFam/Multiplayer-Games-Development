@@ -90,8 +90,6 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
     private Server<String> server;
 
     //TODO in init game vars
-    int maxBounces = 5;
-    int currentBounces = 0;
     int mousePosX = 0;
     int mousePosY = 0;
     int activeTurn = 0; //0 or 1, -1 for game over?
@@ -113,6 +111,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
         vars.put("player2score", 0);
         vars.put("numClientsConnected", 0);
     }
+
 
     @Override
     protected void initGame() {
@@ -204,34 +203,21 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
         getPhysicsWorld().addCollisionHandler(new CollisionHandler(EntityType.BULLET, EntityType.WALL) {
             @Override
             protected void onHitBoxTrigger(Entity a, Entity b, HitBox boxA, HitBox boxB) {
-                if (boxB.getName().equals("LEFT")) {
-                    server.broadcast(HIT_WALL_LEFT);
-                } else if (boxB.getName().equals("RIGHT")) {
-                    server.broadcast(HIT_WALL_RIGHT);
-                } else if (boxB.getName().equals("TOP")) {
-                    server.broadcast(HIT_WALL_UP);
-                } else if (boxB.getName().equals("BOT")) {
-                    server.broadcast(HIT_WALL_DOWN);
-                }
-
                 getGameScene().getViewport().shakeTranslational(5);
 
-                currentBounces++;
+                a.getComponent(BallComponent.class).currentBounces ++;
 
-                if(currentBounces >= maxBounces){
-                    a.removeFromWorld();
-                    currentBounces = 0;
-                    server.broadcast("BULLET_DESPAWN");
-                }
+                if(a.getComponent(BallComponent.class).currentBounces >= a.getComponent(BallComponent.class).maxBounces)
+                    server.broadcast(BULLET_DESPAWN);
             }
         });
 
-        CollisionHandler ballBatHandler = new CollisionHandler(EntityType.BULLET, EntityType.PLAYER_BAT) {
+        CollisionHandler bulletTankHandler = new CollisionHandler(EntityType.BULLET, EntityType.PLAYER_BAT) {
             @Override
             protected void onCollisionBegin(Entity a, Entity bat) {
                 playHitAnimation(bat);
                 a.removeFromWorld();
-                server.broadcast("BULLET_DESPAWN");
+                server.broadcast(BULLET_DESPAWN);
                 getGameScene().getViewport().shakeTranslational(10);
 
                 if(bat == player1)
@@ -239,7 +225,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                 else
                     inc("player1score", +1);
 
-                server.broadcast(bat == player1 ? BALL_HIT_BAT1 : BALL_HIT_BAT2);
+                //server.broadcast(bat == player1 ? BALL_HIT_BAT1 : BALL_HIT_BAT2);
                 server.broadcast("SCORES," + geti("player1score") + "," + geti("player2score"));
             }
 
@@ -249,18 +235,16 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             @Override
             protected void onCollisionBegin(Entity bullet, Entity block) {
                 getGameScene().getViewport().shakeTranslational(8);
-                currentBounces++;
 
-                if(currentBounces >= maxBounces){
-                    bullet.removeFromWorld();
-                    currentBounces = 0;
-                    server.broadcast("BULLET_DESPAWN");
-                }
+                bullet.getComponent(BallComponent.class).currentBounces ++;
+
+                if(bullet.getComponent(BallComponent.class).currentBounces >= bullet.getComponent(BallComponent.class).maxBounces)
+                    server.broadcast(BULLET_DESPAWN);
             }
         };
 
-        getPhysicsWorld().addCollisionHandler(ballBatHandler);
-        getPhysicsWorld().addCollisionHandler(ballBatHandler.copyFor(EntityType.BULLET, EntityType.ENEMY_BAT));
+        getPhysicsWorld().addCollisionHandler(bulletTankHandler);
+        getPhysicsWorld().addCollisionHandler(bulletTankHandler.copyFor(EntityType.BULLET, EntityType.ENEMY_BAT));
         getPhysicsWorld().addCollisionHandler((bulletBlockHandler));
     }
 
@@ -282,6 +266,11 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             if(isInLobby){
                 sendLobbyInformation();
                 return;
+            }
+
+            //return back to lobby if clients disconnect
+            if(geti("numClientsConnected") <1){
+                resetGame();
             }
 
             //Send bullet data when there is a bullet active
@@ -310,7 +299,6 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                 default:
                     break;
             }
-
 
             //TODO replace with heartbeat function
             //For all client connections (active and inactive)
@@ -375,7 +363,6 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
     }
 
     private void initGameObjects() {
-       // bullet = spawn("bullet", getAppWidth() / 2 - 5, getAppHeight() / 2 - 5);
         //could spawn bullet but make this invisible or inactive, then when the player clicks, it is made visible and velocity is put on it and position etc...
         //for int i = 0; i < playerCount ; spawn("tank") if i == .put etc... max is 4?
         player1 = spawn("tank", new SpawnData(getAppWidth() / 4 - 120, getAppHeight() / 2 +20).put("isPlayer", true));
@@ -441,8 +428,21 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                 //If not a spectator, make linked player disconnect
                 if(connectionID != -1)
                     Players.get(connectionID).getComponent(BatComponent.class).connected = false;
+
             }
         }
+    }
+
+    private void resetGame(){
+        System.out.println("Resetting game...");
+        isInLobby = true;
+        if(bullet != null)
+            bullet.removeFromWorld();
+        player1.getComponent(BatComponent.class).reset();
+        player2.getComponent(BatComponent.class).reset();
+        p1barrelComponent.resetRotation(0);
+        p2barrelComponent.resetRotation(180);
+        activeTurn = 0;
     }
 
     private void spawnBullet()
@@ -458,7 +458,6 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
         double middlePosX;
         double middlePosY;
         double spawnOffset = 55;
-
 
         //must only ever be one bullet
         if(bullet != null)

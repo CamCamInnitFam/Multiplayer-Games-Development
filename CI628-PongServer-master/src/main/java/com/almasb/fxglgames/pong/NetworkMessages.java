@@ -13,4 +13,5 @@ public class NetworkMessages {
 
     public static final String BALL_HIT_BAT1 = "BALL_HIT_BAT1";
     public static final String BALL_HIT_BAT2 = "BALL_HIT_BAT2";
+    public static final String BULLET_DESPAWN = "BULLET_DESPAWN";
 }

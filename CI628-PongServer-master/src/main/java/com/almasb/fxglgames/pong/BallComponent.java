@@ -42,11 +42,14 @@ public class BallComponent extends Component {
 
     private PhysicsComponent physics;
     double speed = 300;
+    int currentBounces = 0;
+    int maxBounces = 5;
 
     @Override
     public void onUpdate(double tpf) {
         //limitVelocity();
         checkOffscreen();
+        checkAlive();
     }
 
     private void limitVelocity() {
@@ -78,5 +81,17 @@ public class BallComponent extends Component {
         return speed;
     }
 
+    public void checkAlive(){
+        if(currentBounces >= maxBounces)
+            getEntity().removeFromWorld();
+    }
+
+    public void reset()
+    {
+        currentBounces = 0;
+        physics.setVelocityX(0);
+        physics.setVelocityY(0);
+        physics.overwritePosition(new Point2D(0, 0));
+    }
 
 }

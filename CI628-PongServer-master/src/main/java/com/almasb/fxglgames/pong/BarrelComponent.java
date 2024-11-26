@@ -31,4 +31,8 @@ public class BarrelComponent extends Component
         else
             barrelView.setRotate(angle - 180);
     }
+    public void resetRotation(int rotation){
+        barrelView.setRotate(rotation);
+    }
 }
+
