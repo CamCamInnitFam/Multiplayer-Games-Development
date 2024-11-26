@@ -18,6 +18,7 @@ bool game_started = false;
 bool is_connecting = true;
 bool has_made_connection = false;
 int numConnections = 1;
+bool gameActive = false;
 
 struct connectionData 
 {
@@ -63,9 +64,14 @@ static int on_receive(void* socket_ptr) {
 
         if (cmd == "CONNECTEVENT") {
             numConnections = stoi(args.at(0));
-            std::cout << "connectevent ";
-            std::cout << numConnections;
         }
+
+        /*if (cmd == "GAMESTATE") {
+            std::cout << "GameState Recieved" << std::endl;
+            if (args.at(0) == "Playing")
+                game_started = true;
+        }*/
+           
         
         if (cmd == "GAME_START") 
             game_started = true;
@@ -331,13 +337,15 @@ void load_lobby(SDL_Renderer* renderer, TTF_Font* font)
     // Render the screen
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
-    SDL_StartTextInput();
     SDL_Event e;
     boolean inLobby = true;
 
     SDL_Color white = { 255, 255, 255, 255 };
+    SDL_Color green = { 0, 255, 0, 255 };
+    SDL_Color red = { 255, 0 , 0, 255 };
+    SDL_Color brown = { 139, 69, 19, 255 };
    
-    while (inLobby && !game_started) 
+    while (inLobby && !game_started)
     {
         game->HeartBeat();
         while (SDL_PollEvent(&e))
@@ -346,31 +354,85 @@ void load_lobby(SDL_Renderer* renderer, TTF_Font* font)
                 inLobby = false;
                 break;
             }
-            if (e.type == SDL_KEYDOWN) {                
-                if (e.key.keysym.sym == SDLK_RETURN) 
+            if (e.type == SDL_KEYDOWN) {
+                if (e.key.keysym.sym == SDLK_RETURN)
                 {
                     //Exit lobby if 2 or more connections. Only enabled for p1.
                     if (numConnections >= 2 && game->getPlayerId() == 0)
-                    {
+                    {                       
                         game->send("EXIT_LOBBY");
                         inLobby = false;
                         game_started = true;
-                    }                   
+                    }
                 }
             }
         }
+
+        //Game vars
+        int numPlayers = numConnections;
+        int numActivePlayers = 1;
+        bool ready = false;
+        if (numPlayers > 1)
+            numActivePlayers = 2;
+        int numSpectators = numPlayers - numActivePlayers;
+
+        std::string startGameText;
+        if (numPlayers >= 2 && game->getPlayerId() == 0)
+            startGameText = "Ready to start. Press Enter to begin game!";
+        else if (numPlayers >= 2)
+            startGameText = "Ready to start. Waiting on player 1.";
+        else
+            startGameText = "Waiting for more players to begin...";
+
         
+        ready = numPlayers >= 2;
+
+        if (game_started) {
+            startGameText = "Game in progress. Press Enter to join.";
+            ready = true;
+        }
+
         // Render the screen
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
-        
-        SDL_Texture* lobbyLabel = renderText("In the Lobby!", font, white, renderer);
-        SDL_Rect lobbyLabelRect = { 100, 100, 200, 50 };
+
+        //Create Textures
+        SDL_Texture* lobbyLabel = renderText("Tankz Lobby:", font, brown, renderer);
+        SDL_Texture* numPlayersLabel = renderText(("Number of players: " + std::to_string(numPlayers)).c_str(), font, white, renderer);
+        SDL_Texture* numSpectatorsLabel = renderText(numSpectators > 0 ? ("Number of Spectators: " + std::to_string(numSpectators)).c_str() : "Number of Spectators: O", font, white, renderer);
+        SDL_Texture* player1Label = renderText("Player 1", font, game->getPlayerId() == 0 ? green : white, renderer);
+        SDL_Texture* player2Label = renderText(numPlayers > 1 ? "Player 2" : " ", font, game->getPlayerId() == 1 ? green : white, renderer);
+        SDL_Texture* spectatorLabel = renderText(game->getPlayerId() == -1 ? "You are spectating" : " ", font, white, renderer);
+        SDL_Texture* startGameLabel = renderText(startGameText.c_str(), font, ready ? green : red, renderer);
+
+        //Create Rects
+        SDL_Rect lobbyLabelRect =   { 100, 50, 200,  50 };
+        SDL_Rect numPlayersRect =   { 100, 100, 250, 50 };
+        SDL_Rect playerRect =       { 100, 150, 110, 50 };
+        SDL_Rect player2Rect =      { 100, 200, 110, 50 };
+        SDL_Rect numSpectatorRect = { 100, 250, 275, 50 };
+        SDL_Rect spectatorRect =    {100, 300, 150, 50};
+        SDL_Rect startGameRect =    { 100, 350, 400, 50 };
+
+        //Render   
         SDL_RenderCopy(renderer, lobbyLabel, NULL, &lobbyLabelRect);
+        SDL_RenderCopy(renderer, numPlayersLabel, NULL, &numPlayersRect);
+        SDL_RenderCopy(renderer, player1Label, NULL, &playerRect);
+        SDL_RenderCopy(renderer, player2Label, NULL, &player2Rect);
+        SDL_RenderCopy(renderer, numSpectatorsLabel, NULL, &numSpectatorRect);
+        SDL_RenderCopy(renderer, spectatorLabel, NULL, &spectatorRect);
+        SDL_RenderCopy(renderer, startGameLabel, NULL, &startGameRect);
         SDL_RenderPresent(renderer);
+
+        //Destroy (this is done to prevent memory leaks - textures will keep getting created and stored in RAM)
         SDL_DestroyTexture(lobbyLabel);
+        SDL_DestroyTexture(numPlayersLabel);
+        SDL_DestroyTexture(player1Label);
+        SDL_DestroyTexture(player2Label);
+        SDL_DestroyTexture(numSpectatorsLabel);
+        SDL_DestroyTexture(spectatorLabel);
+        SDL_DestroyTexture(startGameLabel);
     }
-    SDL_StopTextInput(); 
 }
 
 
@@ -415,7 +477,8 @@ int main(int argc, char** argv) {
         exit(6);
     }
    
-    load_connection_screen(renderer, font); 
+    load_connection_screen(renderer, font);
+
     if (has_made_connection) 
     {       
         SDL_Thread* recvThread = SDL_CreateThread(on_receive, "ConnectionReceiveThread", (void*)overallSocket);
@@ -432,7 +495,7 @@ int main(int argc, char** argv) {
 
         is_running = false;
         int threadReturnValue;
-        std::cout << "waiting for threads to exit...";
+        std::cout << "Waiting for threads to exit...";
         SDL_WaitThread(recvThread, &threadReturnValue);
         SDL_WaitThread(sendThread, &threadReturnValue);
     }

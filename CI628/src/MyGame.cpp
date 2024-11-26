@@ -90,8 +90,6 @@ void MyGame::input(SDL_Event& event)
     }
            
     switch (event.key.keysym.sym) {
-        //USER1
-
         //up and down
     case SDLK_w:
         send(event.type == SDL_KEYDOWN ? "W_DOWN" : "W_UP");
@@ -115,11 +113,9 @@ void MyGame::input(SDL_Event& event)
             setCurrentTurn(1);
         if (game_data.id == 1 && isCurrentTurn())
             setCurrentTurn(0);
-        break;
+        break;       
 
-        //USER 2
-
-        //up and down
+        //up and down (archived)
     case SDLK_i:
         send(event.type == SDL_KEYDOWN ? "I_DOWN" : "I_UP");
         break;
@@ -149,28 +145,14 @@ void MyGame::update() {
     
     prevX = game_data.cursorX;
     prevY = game_data.cursorY;
+    
     SDL_GetMouseState(&game_data.cursorX, &game_data.cursorY);
 
     //only send if changed (minimise traffic) and is current turn
     if ((game_data.cursorX != prevX || game_data.cursorY != prevY) && isCurrentTurn())    
         send("MP(" + std::to_string(game_data.cursorX) + "." + std::to_string(game_data.cursorY) + ")");
        
-    //sync with server
-    //if (std::sqrt((predictedX - game_data.bulletX) * (predictedX - game_data.bulletX)) + ((predictedY - game_data.bulletY) * (predictedY - game_data.bulletY)) > 0.01f)
-   //    interpolationTime = 0.0f;
-
-   ////if have not recieved update in 0.4 seconds
-   //if (deltaTime > 0.4) {
-   //    std::cout << deltaTime;
-   //    PredictBulletPosition(deltaTime);
-   //    bullet.y = predictedY;
-   //    bullet.x = predictedX;
-   //}
-   //else {
-   //    bullet.y = game_data.bulletY;
-   //    bullet.x = game_data.bulletX;
-   //}
-   
+  
     bullet.x = game_data.bulletX;
     bullet.y = game_data.bulletY;
 }

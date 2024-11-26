@@ -52,9 +52,6 @@ public class BatComponent extends Component {
 
     protected PhysicsComponent physics;
 
-    //for angle movement
-    //physics.overwriteAngle(entity.getRotation() + 90);
-
     public void up() {
         if(entity.getY() <= 0)
             return;
@@ -151,22 +148,20 @@ public class BatComponent extends Component {
         physics.setLinearVelocity(0, 0);
     }
 
-
     public void reset(){
 
         //Reset Positions
         Point2D newpoint = new Point2D(0,0);
+
         switch(id){
             case(0):
                 newpoint = new Point2D((FXGL.getAppWidth() / 4 - 120),(FXGL.getAppHeight() / 2 +20));
-                physics.overwritePosition(newpoint);
-                //physics.overwriteAngle(0);
                 break;
             case(1):
                 newpoint = new Point2D((3 * FXGL.getAppWidth() / 4 + 80), (FXGL.getAppHeight() / 2 +20));
-                //physics.overwriteAngle(0);
                 break;
         }
+
         physics.overwritePosition(newpoint);
 
         //Reset ID & connected
