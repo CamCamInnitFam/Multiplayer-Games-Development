@@ -605,26 +605,6 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             //Switch Active Turn
             if(key.equals("TURN_END"))
             {
-                /*switch(connectionID)
-                {
-                    case(0):
-                        activeTurn = 1;
-                        for(Connection connect : server.getConnections())
-                        {
-                            if((boolean)connect.getLocalSessionData().getValue("Connected") && (int)connect.getLocalSessionData().getValue("ID") == 1)
-                                connect.send("*"); //TURN START
-                        }
-                        break;
-                    case(1):
-                        activeTurn = 0;
-                        for(Connection connect : server.getConnections())
-                        {
-                            if((boolean)connect.getLocalSessionData().getValue("Connected") && (int)connect.getLocalSessionData().getValue("ID") == 0)
-                                connect.send("*"); //TURN START
-                        }
-                        break;
-                }*/
-
                 //Swap active turn
                 activeTurn = activeTurn == 0 ? 1 : 0;
 

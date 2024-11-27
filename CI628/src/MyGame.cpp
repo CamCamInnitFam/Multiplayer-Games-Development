@@ -42,9 +42,7 @@ void MyGame::on_receive(std::string cmd, std::vector<std::string>& args) {
         setCurrentTurn(stoi(args.at(0)));
         bulletOnScreen = false;
     }
-        
-
-    
+         
     else if (cmd == "BULLET_SPAWN") {
         bulletOnScreen = true;
         game_data.bulletVelocityX = stof(args.at(0));
@@ -56,13 +54,7 @@ void MyGame::on_receive(std::string cmd, std::vector<std::string>& args) {
     else if (cmd == "BULLET_DESPAWN") {
         bulletOnScreen = false;
         std::cout << "Recieved: " << cmd << std::endl;
-    }
-        
-
-   // else if (cmd == "*") {
-    //    setCurrentTurn(game_data.id);
-    //    bulletOnScreen = false;
-    //}
+    }        
                           
     else 
         std::cout << "Received: " << cmd << std::endl;
