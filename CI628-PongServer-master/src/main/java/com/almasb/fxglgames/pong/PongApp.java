@@ -168,12 +168,12 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
             server.broadcast("CONNECTEVENT," + geti("numClientsConnected"));
 
-            //if(!isInLobby)
-            //{
-            //    runOnce(() -> {
-            //       connection.send("GAMESTATE," + "Playing");
-            //    }, Duration.seconds(1));
-            //}
+            if(!isInLobby)
+            {
+                runOnce(() -> {
+                   connection.send("GAMESTATE," + "Playing");
+                }, Duration.seconds(1));
+            }
 
         });
 

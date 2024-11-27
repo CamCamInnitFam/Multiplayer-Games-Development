@@ -66,11 +66,11 @@ static int on_receive(void* socket_ptr) {
             numConnections = stoi(args.at(0));
         }
 
-        /*if (cmd == "GAMESTATE") {
+        if (cmd == "GAMESTATE") {
             std::cout << "GameState Recieved" << std::endl;
-            if (args.at(0) == "Playing")
-                game_started = true;
-        }*/
+            if (args.at(0) == "Playing") 
+                gameActive = true;                          
+        }
            
         
         if (cmd == "GAME_START") 
@@ -358,9 +358,11 @@ void load_lobby(SDL_Renderer* renderer, TTF_Font* font)
                 if (e.key.keysym.sym == SDLK_RETURN)
                 {
                     //Exit lobby if 2 or more connections. Only enabled for p1.
-                    if (numConnections >= 2 && game->getPlayerId() == 0)
+                    if ((numConnections >= 2 && game->getPlayerId() == 0) || gameActive)
                     {                       
-                        game->send("EXIT_LOBBY");
+                        if(!gameActive)
+                            game->send("EXIT_LOBBY");
+
                         inLobby = false;
                         game_started = true;
                     }
@@ -383,11 +385,10 @@ void load_lobby(SDL_Renderer* renderer, TTF_Font* font)
             startGameText = "Ready to start. Waiting on player 1.";
         else
             startGameText = "Waiting for more players to begin...";
-
         
         ready = numPlayers >= 2;
 
-        if (game_started) {
+        if (gameActive) {
             startGameText = "Game in progress. Press Enter to join.";
             ready = true;
         }
