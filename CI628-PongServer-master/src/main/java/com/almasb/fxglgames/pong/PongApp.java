@@ -31,6 +31,7 @@ import com.almasb.fxgl.app.ApplicationMode;
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.core.math.FXGLMath;
+import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.SpawnData;
 import com.almasb.fxgl.input.UserAction;
@@ -159,15 +160,20 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             //This will usually be 0 (p1), 1 (p2) or -1 (spectator).
             inc("numClientsConnected", +1);
             connection.addMessageHandlerFX(this);
-            connection.send("ID," + connection.getLocalSessionData().getValue("ID"));
+            //connection.send("ID," + connection.getLocalSessionData().getValue("ID"));
+            connection.send("INITIAL_DATA," + connection.getLocalSessionData().getValue("ID") + "," + geti("numClientsConnected") + "," + String.valueOf(activeTurn));
+            FXGL.getGameTimer().runOnceAfter(() -> {
+                // Code to run after the wait
+                server.broadcast("CONNECTEVENT," + geti("numClientsConnected"));
+            }, Duration.seconds(0.5));
 
             //Use runOnce to send another message to the client
             //TODO put this into the ID send? Something like INITALDATA...
-            runOnce(() -> {
-                connection.send("CONNECTEVENT," + geti("numClientsConnected"));
-            }, Duration.seconds(1));
+            //runOnce(() -> {
+            //    connection.send("CONNECTEVENT," + geti("numClientsConnected"));
+            //}, Duration.seconds(1));
 
-            server.broadcast("CONNECTEVENT," + geti("numClientsConnected"));
+
 
             if(!isInLobby)
             {
@@ -593,11 +599,13 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                 server.broadcast("GAME_START");
             }
 
+            if(key.equals("INIT_DATA_REQ")) //Sent by client if initial data not received properly
+                connection.send("INITIAL_DATA," + String.valueOf(connectionID) + "," + geti("numClientsConnected") + "," + String.valueOf(activeTurn));
 
             //Switch Active Turn
             if(key.equals("TURN_END"))
             {
-                switch(connectionID)
+                /*switch(connectionID)
                 {
                     case(0):
                         activeTurn = 1;
@@ -615,7 +623,13 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                                 connect.send("*"); //TURN START
                         }
                         break;
-                }
+                }*/
+
+                //Swap active turn
+                activeTurn = activeTurn == 0 ? 1 : 0;
+
+                //Send all active turn
+                server.broadcast("TURN_CHANGE," + String.valueOf(activeTurn));
             }
 
             //MOUSE POS = MP

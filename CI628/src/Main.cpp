@@ -76,6 +76,9 @@ static int on_receive(void* socket_ptr) {
             game_started = true; //exits lobby loop, lets program know to kill threads when game is closed
 
         game->on_receive(cmd, args);
+
+        if (cmd == "INITIAL_DATA")
+            numConnections = game->numConnectedClients;
                     
     } while (received > 0 && is_running);
 

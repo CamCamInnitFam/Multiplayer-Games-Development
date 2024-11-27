@@ -10,9 +10,8 @@ void MyGame::on_receive(std::string cmd, std::vector<std::string>& args) {
             game_data.player1X = stoi(args.at(1));
             game_data.player2Y = stoi(args.at(2));
             game_data.player2X = stoi(args.at(3));
-            //game_data.bulletX = stoi(args.at(4));
-            //game_data.bulletY = stoi(args.at(5));
         }
+
         if (args.size() == 6) {
             game_data.player1Y = stoi(args.at(0));
             game_data.player1X = stoi(args.at(1));
@@ -26,6 +25,26 @@ void MyGame::on_receive(std::string cmd, std::vector<std::string>& args) {
     else if (cmd == "ID")
         game_data.id = stoi(args.at(0));
 
+    else if (cmd == "INITIAL_DATA") {
+        std::cout << "Recieved Initial Data" << std::endl;
+        if (args.size() == 3) {
+            game_data.id = stoi(args.at(0));
+            numConnectedClients = stoi(args.at(1));
+            currentTurn = stoi(args.at(2));
+        }
+        else {
+            std::cout << "not size 3! " << args.size() <<  std::endl;
+            send("INIT_DATA_REQ");
+        }
+    }
+
+    else if (cmd == "TURN_CHANGE") {
+        setCurrentTurn(stoi(args.at(0)));
+        bulletOnScreen = false;
+    }
+        
+
+    
     else if (cmd == "BULLET_SPAWN") {
         bulletOnScreen = true;
         game_data.bulletVelocityX = stof(args.at(0));
@@ -40,15 +59,11 @@ void MyGame::on_receive(std::string cmd, std::vector<std::string>& args) {
     }
         
 
-    else if (cmd == "*") {
-        setCurrentTurn(game_data.id);
-        bulletOnScreen = false;
-    }
-           
-
-   // else if (cmd == "CURRENT_TURN") 
-    //    setCurrentTurn(stoi(args.at(0)));
-                
+   // else if (cmd == "*") {
+    //    setCurrentTurn(game_data.id);
+    //    bulletOnScreen = false;
+    //}
+                          
     else 
         std::cout << "Received: " << cmd << std::endl;
 
