@@ -162,6 +162,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             connection.send("ID," + connection.getLocalSessionData().getValue("ID"));
 
             //Use runOnce to send another message to the client
+            //TODO put this into the ID send? Something like INITALDATA...
             runOnce(() -> {
                 connection.send("CONNECTEVENT," + geti("numClientsConnected"));
             }, Duration.seconds(1));
@@ -171,9 +172,12 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             if(!isInLobby)
             {
                 runOnce(() -> {
-                   connection.send("GAMESTATE," + "Playing");
+                   connection.send("GAMESTATE");
+                   System.out.println("Ran Once");
                 }, Duration.seconds(1));
             }
+
+            //connection.send("CURRENT_TURN," + String.valueOf(activeTurn));
 
         });
 

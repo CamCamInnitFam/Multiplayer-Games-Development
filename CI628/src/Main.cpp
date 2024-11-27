@@ -60,25 +60,23 @@ static int on_receive(void* socket_ptr) {
             }
         }
 
-        game->on_receive(cmd, args);
+        if (cmd == "exit")
+            break;
 
         if (cmd == "CONNECTEVENT") {
             numConnections = stoi(args.at(0));
         }
 
-        if (cmd == "GAMESTATE") {
-            std::cout << "GameState Recieved" << std::endl;
-            if (args.at(0) == "Playing") 
-                gameActive = true;                          
-        }
-           
+        if (cmd == "GAMESTATE" || cmd == "GAMESTATEGAME_DATA") { //Sometimes server gets confused. This is a hack.
+                std::cout << "GameState Recieved" << std::endl;
+                gameActive = true; //allows starting in lobby                                                    
+        }          
         
         if (cmd == "GAME_START") 
-            game_started = true;
-        
-        if (cmd == "exit") 
-            break;
-        
+            game_started = true; //exits lobby loop, lets program know to kill threads when game is closed
+
+        game->on_receive(cmd, args);
+                    
     } while (received > 0 && is_running);
 
     return 0;

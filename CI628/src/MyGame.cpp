@@ -46,10 +46,9 @@ void MyGame::on_receive(std::string cmd, std::vector<std::string>& args) {
     }
            
 
-    else if (cmd == "CONNECTEVENT") {
-        
-    }
-             
+   // else if (cmd == "CURRENT_TURN") 
+    //    setCurrentTurn(stoi(args.at(0)));
+                
     else 
         std::cout << "Received: " << cmd << std::endl;
 
