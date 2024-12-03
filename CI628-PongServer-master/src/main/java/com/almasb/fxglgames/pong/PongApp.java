@@ -31,26 +31,23 @@ import com.almasb.fxgl.app.ApplicationMode;
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.core.math.FXGLMath;
+import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.SpawnData;
-import com.almasb.fxgl.entity.component.Component;
 import com.almasb.fxgl.input.UserAction;
 import com.almasb.fxgl.net.*;
 import com.almasb.fxgl.physics.CollisionHandler;
 import com.almasb.fxgl.physics.HitBox;
 import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.ui.UI;
-import javafx.geometry.Point2D;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
 import javafx.util.Duration;
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
+import java.io.*;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -73,7 +70,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
         settings.setFontUI("inkTank.ttf");
         settings.setApplicationMode(ApplicationMode.DEBUG);
         settings.setWidth(1200);
-        settings.setHeight(800);
+        settings.setHeight(840);
     }
 
     private Entity player1;
@@ -82,129 +79,25 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
     private BatComponent player1Bat;
     private BarrelComponent p1barrelComponent;
     private BatComponent player2Bat;
-    //private
+    private BarrelComponent p2barrelComponent;
+    private List<Entity> Players;
     private Entity block1;
     private Entity block2;
+    private Entity block3;
+    private Entity block4;
+    private Entity block5;
     private Entity AIPlayer; //TODO
-
     private Server<String> server;
 
-    int maxBounces = 5;
-    int currentBounces = 0;
+    //TODO in init game vars
     int mousePosX = 0;
     int mousePosY = 0;
-
-    //implement different bullet types???
-    //more score for direct bullet hit?
-    //less score for bounced bullet hit???
-    //Two different entity types (ricochet bullet, non ricochet)
-    //different key to fire these, or perhaps you have to reach a powerup and the next bullet is one that can ricochet?
-
-
-    //perhaps the bullet (ball?) is always spawned in but is not visible
-    //server sends information about bullet location and then a 1 or 0 depending on whether or not it is visible and therefore
-    //should be drawn by the client's renderer
-    //if we only send bullet pos when its active or visible, this minimised traffic though
-    //perhaps talk about this in the report, what i chose to do and why?
+    int activeTurn = 0; //0 or 1, -1 for game over?
+    boolean gameOver = false;
+    boolean isInLobby = true;
 
     @Override
     protected void initInput() {
-        getInput().addAction(new UserAction("Up1") {
-            @Override
-            protected void onActionBegin() {
-                player1Bat.up();
-            }
-
-            @Override
-            protected void onActionEnd() {
-                player1Bat.stop();
-            }
-        }, KeyCode.W);
-
-        getInput().addAction(new UserAction("Down1") {
-            @Override
-            protected void onActionBegin() {
-                player1Bat.down();
-            }
-
-            @Override
-            protected void onActionEnd() {
-                player1Bat.stop();
-            }
-        }, KeyCode.S);
-
-        getInput().addAction(new UserAction("Right1") {
-            @Override
-            protected void onActionBegin() {
-                player1Bat.right();
-            }
-
-            @Override
-            protected void onActionEnd() {
-                player1Bat.stop();
-            }
-        }, KeyCode.D);
-
-        getInput().addAction(new UserAction("Left1") {
-            @Override
-            protected void onActionBegin() {
-                player1Bat.left();
-            }
-
-            @Override
-            protected void onActionEnd() {
-                player1Bat.stop();
-            }
-        }, KeyCode.A);
-
-        getInput().addAction(new UserAction("Up2") {
-            @Override
-            protected void onActionBegin() {
-                player2Bat.up();
-            }
-
-            @Override
-            protected void onActionEnd() {
-                player2Bat.stop();
-            }
-        }, KeyCode.I);
-
-        getInput().addAction(new UserAction("Down2") {
-            @Override
-            protected void onActionBegin() {
-                player2Bat.down();
-            }
-
-            @Override
-            protected void onActionEnd() {
-                player2Bat.stop();
-            }
-        }, KeyCode.K);
-
-        getInput().addAction(new UserAction("Left2") {
-            @Override
-            protected void onActionBegin() {
-                player2Bat.left();
-            }
-
-            @Override
-            protected void onActionEnd() {
-                player2Bat.stop();
-            }
-        }, KeyCode.J);
-
-        getInput().addAction(new UserAction("Right2") {
-            @Override
-            protected void onActionBegin() {
-                player2Bat.right();
-            }
-
-            @Override
-            protected void onActionEnd() {
-                player2Bat.stop();
-            }
-        }, KeyCode.L);
-
         getInput().addAction(new UserAction("Shoot")
         {
             @Override
@@ -216,24 +109,104 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
     protected void initGameVars(Map<String, Object> vars) {
         vars.put("player1score", 0);
         vars.put("player2score", 0);
+        vars.put("numClientsConnected", 0);
     }
+
 
     @Override
     protected void initGame() {
         Writers.INSTANCE.addTCPWriter(String.class, outputStream -> new MessageWriterS(outputStream));
         Readers.INSTANCE.addTCPReader(String.class, in -> new MessageReaderS(in));
+        Players = new ArrayList<>();
 
-        server = getNetService().newTCPServer(55555, new ServerConfig<>(String.class));
-
-        server.setOnConnected(connection -> {
-            connection.addMessageHandlerFX(this);
-        });
+        //Set up world before server?
 
         getGameWorld().addEntityFactory(new PongFactory());
         getGameScene().setBackgroundColor(Color.DARKGREEN);
 
-        initScreenBounds();
         initGameObjects();
+        initScreenBounds();
+
+        server = getNetService().newTCPServer(55555, new ServerConfig<>(String.class));
+
+        server.setOnConnected(connection -> { //when a client connects
+            boolean hasSetId = false;
+            System.out.println("Connection Found.");
+
+            //loop through all player Entities and check if connected
+            //if not - assign id to client and entity
+            for(int i = 0; i < Players.size(); i++){
+                if(!Players.get(i).getComponent(BatComponent.class).connected){
+                    connection.getLocalSessionData().setValue("ID", i);
+                    connection.getLocalSessionData().setValue("HeartBeatTime", System.currentTimeMillis() + 2000);
+                    connection.getLocalSessionData().setValue("Connected", true);
+                    Players.get(i).getComponent(BatComponent.class).connected = true;
+                    Players.get(i).getComponent(BatComponent.class).id = i;
+                    hasSetId = true;
+                    System.out.println("Player Connected!");
+                    break;
+                }
+            }
+
+            //make extras -1 (they can spectate) they are still connected
+            if(!hasSetId){
+                connection.getLocalSessionData().setValue("ID", -1);
+                connection.getLocalSessionData().setValue("Connected", true);
+                connection.getLocalSessionData().setValue("HeartBeatTime", System.currentTimeMillis() + 2000);
+                System.out.println("Now Spectating...");
+            }
+
+            //Client is sent its own ID for it to handle
+            //This will usually be 0 (p1), 1 (p2) or -1 (spectator).
+            inc("numClientsConnected", +1);
+            connection.addMessageHandlerFX(this);
+            //connection.send("ID," + connection.getLocalSessionData().getValue("ID"));
+            connection.send("INITIAL_DATA," + connection.getLocalSessionData().getValue("ID") + "," + geti("numClientsConnected") + "," + String.valueOf(activeTurn));
+            FXGL.getGameTimer().runOnceAfter(() -> {
+                // Code to run after the wait
+                server.broadcast("CONNECTEVENT," + geti("numClientsConnected"));
+            }, Duration.seconds(0.5));
+
+            //Use runOnce to send another message to the client
+            //TODO put this into the ID send? Something like INITALDATA...
+            //runOnce(() -> {
+            //    connection.send("CONNECTEVENT," + geti("numClientsConnected"));
+            //}, Duration.seconds(1));
+
+
+
+            if(!isInLobby)
+            {
+                runOnce(() -> {
+                   connection.send("GAMESTATE");
+                   System.out.println("Ran Once");
+                }, Duration.seconds(1));
+            }
+
+            //connection.send("CURRENT_TURN," + String.valueOf(activeTurn));
+
+        });
+
+        server.setOnDisconnected(connection -> {
+            System.out.println("CLIENT DISCONNECT");
+            inc("numClientsConnected", -1);
+            connection.send("CONNECTEVENT," + geti("numClientsConnected"));
+            server.broadcast("CONNECTEVENT," + geti("numClientsConnected"));
+            int connectionID = connection.getLocalSessionData().getValue("ID");
+
+            if(connectionID == -1)
+                return;
+
+            for(Entity player : Players){
+                if(player.getComponent(BatComponent.class).id == connectionID){
+                    player.getComponent(BatComponent.class).connected = false;
+                    System.out.println("Player Disconnected");
+                    break;
+                }
+            }
+
+        });
+
 
         var t = new Thread(server.startTask()::run);
         t.setDaemon(true);
@@ -247,34 +220,21 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
         getPhysicsWorld().addCollisionHandler(new CollisionHandler(EntityType.BULLET, EntityType.WALL) {
             @Override
             protected void onHitBoxTrigger(Entity a, Entity b, HitBox boxA, HitBox boxB) {
-                if (boxB.getName().equals("LEFT")) {
-                    server.broadcast(HIT_WALL_LEFT);
-                } else if (boxB.getName().equals("RIGHT")) {
-                    server.broadcast(HIT_WALL_RIGHT);
-                } else if (boxB.getName().equals("TOP")) {
-                    server.broadcast(HIT_WALL_UP);
-                } else if (boxB.getName().equals("BOT")) {
-                    server.broadcast(HIT_WALL_DOWN);
-                }
-
                 getGameScene().getViewport().shakeTranslational(5);
 
-                currentBounces++;
+                a.getComponent(BallComponent.class).currentBounces ++;
 
-                if(currentBounces >= maxBounces){
-                    a.removeFromWorld();
-                    currentBounces = 0;
-                    server.broadcast("BULLET_DESPAWN");
-                }
+                if(a.getComponent(BallComponent.class).currentBounces >= a.getComponent(BallComponent.class).maxBounces)
+                    server.broadcast(BULLET_DESPAWN);
             }
         });
 
-        CollisionHandler ballBatHandler = new CollisionHandler(EntityType.BULLET, EntityType.PLAYER_BAT) {
+        CollisionHandler bulletTankHandler = new CollisionHandler(EntityType.BULLET, EntityType.PLAYER_BAT) {
             @Override
             protected void onCollisionBegin(Entity a, Entity bat) {
                 playHitAnimation(bat);
                 a.removeFromWorld();
-                server.broadcast("BULLET_DESPAWN");
+                server.broadcast(BULLET_DESPAWN);
                 getGameScene().getViewport().shakeTranslational(10);
 
                 if(bat == player1)
@@ -282,7 +242,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                 else
                     inc("player1score", +1);
 
-                server.broadcast(bat == player1 ? BALL_HIT_BAT1 : BALL_HIT_BAT2);
+                //server.broadcast(bat == player1 ? BALL_HIT_BAT1 : BALL_HIT_BAT2);
                 server.broadcast("SCORES," + geti("player1score") + "," + geti("player2score"));
             }
 
@@ -292,18 +252,16 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             @Override
             protected void onCollisionBegin(Entity bullet, Entity block) {
                 getGameScene().getViewport().shakeTranslational(8);
-                currentBounces++;
 
-                if(currentBounces >= maxBounces){
-                    bullet.removeFromWorld();
-                    currentBounces = 0;
-                    server.broadcast("BULLET_DESPAWN");
-                }
+                bullet.getComponent(BallComponent.class).currentBounces ++;
+
+                if(bullet.getComponent(BallComponent.class).currentBounces >= bullet.getComponent(BallComponent.class).maxBounces)
+                    server.broadcast(BULLET_DESPAWN);
             }
         };
 
-        getPhysicsWorld().addCollisionHandler(ballBatHandler);
-        getPhysicsWorld().addCollisionHandler(ballBatHandler.copyFor(EntityType.BULLET, EntityType.ENEMY_BAT));
+        getPhysicsWorld().addCollisionHandler(bulletTankHandler);
+        getPhysicsWorld().addCollisionHandler(bulletTankHandler.copyFor(EntityType.BULLET, EntityType.ENEMY_BAT));
         getPhysicsWorld().addCollisionHandler((bulletBlockHandler));
     }
 
@@ -322,17 +280,93 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
     protected void onUpdate(double tpf) {
         if (!server.getConnections().isEmpty())
         {
+            if(isInLobby){
+                processLobbyInformation();
+                return;
+            }
+
+            //return back to lobby if clients disconnect
+            if(geti("numClientsConnected") <1)
+                resetGame();
+
             //Send bullet data when there is a bullet active
             String message;
+
+            //CHECK IF POS HAVE CHANGED FIRST
+            //POTENTIALLY STOP BROADCASTING - ONLY SEND CLIENT 1 INFORMATION ABOUT CLIENT 2 ETC? ONLY WHEN CLIENT KNOWS ITS OWN POSITION (which it can calculate easily with +- 40).
+
+            //TODO always send velocity
             if(bullet != null && bullet.isActive())
                 message = "GAME_DATA," + player1.getY() + "," + player1.getX() + "," + player2.getY() + "," + player2.getX() + "," + bullet.getX() + "," + bullet.getY();
             else
                 message = "GAME_DATA," + player1.getY() + "," + player1.getX() + "," + player2.getY() + "," + player2.getX();
 
             server.broadcast(message);
+
+            //TODO list of barrel components, then do barrels[activeTurn].rotateBarrel()
+            //This will allow for multiple tanks at once
+            switch(activeTurn){
+                case 0:
+                    p1barrelComponent.rotateBarrel(mousePosX, mousePosY, 0);
+                    break;
+                case 1:
+                    p2barrelComponent.rotateBarrel(mousePosX, mousePosY, 1);
+                    break;
+                default:
+                    break;
+            }
+
+            //TODO replace with heartbeat function
+            //For all client connections (active and inactive)
+            for(Connection connection: server.getConnections())
+            {
+                //Checks
+                if(!connection.isConnected())
+                    continue;
+
+                if(!(boolean)connection.getLocalSessionData().getValue("Connected"))
+                    continue;
+
+                //Setup
+                long lastHeartBeatTime = connection.getLocalSessionData().getValue("HeartBeatTime");
+
+                //Check last Signal Time from client
+                if(System.currentTimeMillis() > lastHeartBeatTime + 3000){
+                    //connection.terminate();
+                    int connectionID = connection.getLocalSessionData().getValue("ID");
+                    System.out.println("Client " + connectionID + " disconnected!");
+                    connection.getLocalSessionData().setValue("Connected", false);
+                    inc("numClientsConnected", -1);
+
+                    //If not a spectator, make linked player disconnect
+                    if(connectionID != -1)
+                        Players.get(connectionID).getComponent(BatComponent.class).connected = false;
+                }
+            }
+
+            //Add spectators to game if one of the main clients disconnect
+            for(int i = 0; i < Players.size(); i++)
+            {
+                if(!Players.get(i).getComponent(BatComponent.class).connected)
+                {
+                    for(Connection connection : server.getConnections())
+                    {
+                        int id = connection.getLocalSessionData().getValue("ID");
+                        if((boolean)connection.getLocalSessionData().getValue("Connected")  && id == -1)
+                        {
+                            connection.getLocalSessionData().setValue("ID", i);
+                            connection.send("ID," + i);
+                            Players.get(i).getComponent(BatComponent.class).connected = true;
+                        }
+                    }
+                }
+            }
         }
 
-        p1barrelComponent.rotateBarrel(mousePosX, mousePosY);
+     if(server.getConnections().size() < 2){
+            //add AI?
+            //TODO
+        }
     }
 
     private void initScreenBounds() {
@@ -345,17 +379,23 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
     }
 
     private void initGameObjects() {
-       // bullet = spawn("bullet", getAppWidth() / 2 - 5, getAppHeight() / 2 - 5);
         //could spawn bullet but make this invisible or inactive, then when the player clicks, it is made visible and velocity is put on it and position etc...
-        player1 = spawn("tank", new SpawnData(getAppWidth() / 4, getAppHeight() / 2).put("isPlayer", true));
-        player2 = spawn("tank", new SpawnData(3 * getAppWidth() / 4, getAppHeight() / 2).put("isPlayer", false));
+        //for int i = 0; i < playerCount ; spawn("tank") if i == .put etc... max is 4?
+        player1 = spawn("tank", new SpawnData(getAppWidth() / 4 - 120, getAppHeight() / 2 +20).put("isPlayer", true));
+        player2 = spawn("tank", new SpawnData(3 * getAppWidth() / 4 + 60, getAppHeight() / 2 +20).put("isPlayer", false));
+        Players.add(player1);
+        Players.add(player2);
 
         player1Bat = player1.getComponent(BatComponent.class);
         p1barrelComponent = player1.getComponent(BarrelComponent.class);
         player2Bat = player2.getComponent(BatComponent.class);
+        p2barrelComponent = player2.getComponent(BarrelComponent.class);
 
-        block1 = spawn("block", new SpawnData(600, 340));
-        block2 = spawn("block", new SpawnData(420, 220));
+        block1 = spawn("block", new SpawnData(600, 380));
+        block2 = spawn("block", new SpawnData(420, 80));
+        block3 = spawn("block", new SpawnData(780, 80));
+        block4 = spawn("block", new SpawnData(420, 620));
+        block5 = spawn("block", new SpawnData(780, 620));
     }
 
     private void playHitAnimation(Entity bat) {
@@ -368,27 +408,117 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                 .to(0)
                 .buildAndPlay();
     }
-    /*public void playMovementAnimation(Entity tank, String direction){
-        int x = 0;
-        int y = 0;
-        if(direction == "UP")
-            y = -60;
-        else if(direction == "DOWN")
-            y = 60;
-        else if(direction == "RIGHT")
-            x = 60;
-        else
-            x = -60;
 
+    private void processLobbyInformation()
+    {
+        checkHeartBeats();
+        swapPlayer1();
+        spectatorsToPlayers();
+    }
 
-        animationBuilder()
-                .duration(new Duration(1))
-                .interpolator(Interpolators.LINEAR.EASE_OUT())
-                .translate(tank)
-                .from(tank.getPosition())
-                .to(tank.getPosition().add(x, y))
-                .buildAndPlay();
-    }*/
+    private void spectatorsToPlayers()
+    {
+        for(int i = 0; i < Players.size(); i++)
+        {
+            if(!Players.get(i).getComponent(BatComponent.class).connected)
+            {
+                for(Connection connection : server.getConnections())
+                {
+                    int id = connection.getLocalSessionData().getValue("ID");
+                    if((boolean)connection.getLocalSessionData().getValue("Connected")  && id == -1)
+                    {
+                        connection.getLocalSessionData().setValue("ID", i);
+                        connection.send("ID," + i);
+                        Players.get(i).getComponent(BatComponent.class).connected = true;
+                    }
+                }
+            }
+        }
+    }
+
+    private void swapPlayer1()
+    {
+        if (server.getConnections().isEmpty())
+            return;
+
+        for(Entity player : Players)
+        {
+            BatComponent batcomponent = player.getComponent(BatComponent.class);
+
+            //P1 connected, not interested in swapping
+            if (batcomponent.connected  && batcomponent.id == 0)
+                return;
+
+            //If spectator, skip
+            if(batcomponent.id == -1)
+                continue;
+
+            //if player 2 is connected, proceed with swapping
+            if(batcomponent.connected && batcomponent.id == 1)
+            {
+                //Swap player 1 for player 2
+                batcomponent.connected = false;
+                Players.get(0).getComponent(BatComponent.class).connected = true;
+                for(Connection connection : server.getConnections())
+                {
+                    if((int)connection.getLocalSessionData().getValue("ID") == 1)//p2
+                    {
+                        connection.getLocalSessionData().setValue("ID", 0);
+                        connection.send("ID," + 0);
+                    }
+                }
+            }
+        }
+    }
+
+    private void checkHeartBeats()
+    {
+        if (server.getConnections().isEmpty())
+            return;
+
+        //For all client connections (active and inactive)
+        for(Connection connection: server.getConnections())
+        {
+            //Checks
+            if(!connection.isConnected())
+                continue;
+
+            if(!(boolean)connection.getLocalSessionData().getValue("Connected"))
+                continue;
+
+            //Setup
+            long lastHeartBeatTime = connection.getLocalSessionData().getValue("HeartBeatTime");
+
+            //Check last Signal Time from client
+            if(System.currentTimeMillis() > lastHeartBeatTime + 4000){
+                //connection.terminate();
+                int connectionID = connection.getLocalSessionData().getValue("ID");
+                System.out.println("Client " + connectionID + " disconnected!");
+                connection.getLocalSessionData().setValue("Connected", false);
+                inc("numClientsConnected", -1);
+                server.broadcast("CONNECTEVENT," + geti("numClientsConnected"));
+
+                //If not a spectator, make linked player disconnect
+                if(connectionID != -1)
+                    Players.get(connectionID).getComponent(BatComponent.class).connected = false;
+
+            }
+        }
+    }
+
+    private void resetGame(){
+        System.out.println("Resetting game...");
+        isInLobby = true;
+        if(bullet != null)
+            bullet.removeFromWorld();
+        player1.getComponent(BatComponent.class).reset();
+        player2.getComponent(BatComponent.class).reset();
+        p1barrelComponent.resetRotation(0);
+        p2barrelComponent.resetRotation(180);
+        activeTurn = 0;
+        set("player1score", 0);
+        set("player2score", 0);
+    }
 
     private void spawnBullet()
     {
@@ -400,14 +530,32 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
         //getPhysicsWorld().onEntityRemoved(bullet) THEN activate new turn??? //TODO
 
+        double middlePosX;
+        double middlePosY;
+        double spawnOffset = 55;
+
         //must only ever be one bullet
         if(bullet != null)
             if(bullet.isActive())
                 return;
 
-        double middlePosX = player1.getCenter().getX();
-        double middlePosY = player1.getCenter().getY();
-        double spawnOffset = 55;
+        switch(activeTurn)
+        {
+            case(0):
+                middlePosX = player1.getCenter().getX();
+                middlePosY = player1.getCenter().getY();
+                break;
+
+            case(1):
+                middlePosX = player2.getCenter().getX();
+                middlePosY = player2.getCenter().getY();
+                break;
+
+            default:
+                middlePosY = 0;
+                middlePosX  = 0;
+                break;
+        }
 
         //get positions
         double deltaX = mousePosX - middlePosX;
@@ -424,31 +572,64 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
             //spawn bullet
             bullet = spawn("bullet", new SpawnData(middlePosX + directionX * spawnOffset, middlePosY + directionY * spawnOffset));
-            server.broadcast("BULLET_SPAWN");
 
             //set velocity
             double bulletSpeed = bullet.getComponent(BallComponent.class).getSpeed();
             bullet.getComponent(PhysicsComponent.class).setLinearVelocity(directionX * bulletSpeed, directionY * bulletSpeed);
+            server.broadcast("BULLET_SPAWN," + bullet.getComponent(PhysicsComponent.class).getVelocityX() + "," + bullet.getComponent(PhysicsComponent.class).getVelocityY() + "," + bullet.getX() + "," + bullet.getY());
         }
     }
 
     @Override
     public void onReceive(Connection<String> connection, String message) {
+
         var tokens = message.split(",");
-        //WILL HAVE TO DEAL WITH IDs  ?
+        int connectionID = connection.getLocalSessionData().getValue("ID");
 
         Arrays.stream(tokens).skip(1).forEach(key -> {
+
+            //Receive heartbeat to establish active connection
+            if(key.equals("heartbeat"))
+                connection.getLocalSessionData().setValue("HeartBeatTime", System.currentTimeMillis());
+
+            //Exit lobby (start main game)
+            if(key.equals("EXIT_LOBBY"))
+            {
+                isInLobby = false;
+                server.broadcast("GAME_START");
+            }
+
+            if(key.equals("INIT_DATA_REQ")) //Sent by client if initial data not received properly
+                connection.send("INITIAL_DATA," + String.valueOf(connectionID) + "," + geti("numClientsConnected") + "," + String.valueOf(activeTurn));
+
+            //Switch Active Turn
+            if(key.equals("TURN_END"))
+            {
+                //Swap active turn
+                activeTurn = activeTurn == 0 ? 1 : 0;
+
+                //Send all active turn
+                server.broadcast("TURN_CHANGE," + String.valueOf(activeTurn));
+            }
+
             //MOUSE POS = MP
+            //SHOULD ONLY RECIEVE FROM CLIENT WHEN IT IS THEIR TURN...
             if(key.startsWith("MP"))
             {
-                String coordinates = key.substring(3, key.length()-1);
-                if(coordinates.split("\\.").length ==2)
+                String coordinates = "0.0";
+                try{
+                    coordinates = key.substring(3, key.length()-1);
+                }
+                catch(Exception e){
+                    System.out.println("errored!");
+                }
+
+                if(coordinates.split("\\.").length == 2)
                 {
                     mousePosX = Integer.parseInt(coordinates.split("\\.")[0]);
                     mousePosY = Integer.parseInt(coordinates.split("\\.")[1]);
                 }
             }
-
 
             //INPUT
 
@@ -457,15 +638,42 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                 if(key.endsWith("_DOWN"))
                     getInput().mockButtonPress(MouseButton.PRIMARY);
 
-               if(key.endsWith("_UP"))
+                if(key.endsWith("_UP"))
                     getInput().mockButtonRelease(MouseButton.PRIMARY);
 
             }else{
                 //keyboard
-                if (key.endsWith("_DOWN")) {
-                    getInput().mockKeyPress(KeyCode.valueOf(key.substring(0, 1)));
-                } else if (key.endsWith("_UP")) {
-                    getInput().mockKeyRelease(KeyCode.valueOf(key.substring(0, 1)));
+                if (key.endsWith("_DOWN"))
+                //TODO could do up() down() left() and right() and pass in the connection. Then check connection
+                    //here and provide p1bat or p2bat (tank) movement
+                //TODO change player1Bat to be player1Tank
+                {
+                    switch(key.substring(0, 1)){
+                        case("W"):
+                            if(connectionID == 0)
+                                player1Bat.up();
+                            else if(connectionID == 1)
+                                player2Bat.up();
+                            break;
+                        case("A"):
+                            if(connectionID == 0)
+                                player1Bat.left();
+                            else if(connectionID == 1)
+                                player2Bat.left();
+                            break;
+                        case("S"):
+                            if(connectionID == 0)
+                                player1Bat.down();
+                            else if(connectionID == 1)
+                                player2Bat.down();
+                            break;
+                        case("D"):
+                            if(connectionID == 0)
+                                player1Bat.right();
+                            else if(connectionID == 1)
+                                player2Bat.right();
+                            break;
+                    }
                 }
             }
         });
@@ -473,8 +681,8 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
     static class MessageWriterS implements TCPMessageWriter<String> {
 
-        private OutputStream os;
-        private PrintWriter out;
+        private final OutputStream os;
+        private final PrintWriter out;
 
         MessageWriterS(OutputStream os) {
             this.os = os;
@@ -490,9 +698,9 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
     static class MessageReaderS implements TCPMessageReader<String> {
 
-        private BlockingQueue<String> messages = new ArrayBlockingQueue<>(50);
+        private final BlockingQueue<String> messages = new ArrayBlockingQueue<>(50);
 
-        private InputStreamReader in;
+        private final InputStreamReader in;
 
         MessageReaderS(InputStream is) {
             in =  new InputStreamReader(is);

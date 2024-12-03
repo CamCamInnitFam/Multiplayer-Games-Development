@@ -24,8 +24,15 @@ public class BarrelComponent extends Component
         barrelView.setTranslateY(15);
     }
 
-    public void rotateBarrel(int x, int y){
+    public void rotateBarrel(int x, int y, int tank){
         double angle = Math.toDegrees(Math.atan2(y - entity.getCenter().getY(), x - entity.getCenter().getX() ));
-        barrelView.setRotate(angle);
+        if(tank == 0)
+            barrelView.setRotate(angle);
+        else
+            barrelView.setRotate(angle - 180);
+    }
+    public void resetRotation(int rotation){
+        barrelView.setRotate(rotation);
     }
 }
+

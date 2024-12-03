@@ -1,4 +1,9 @@
 ﻿  MyGame.cpp
-E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(43,12): warning C4101: 'y': unreferenced local variable
-E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(43,9): warning C4101: 'x': unreferenced local variable
+E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(20,37): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(21,37): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(50,33): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(51,33): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(142,21): warning C4244: 'initializing': conversion from 'Uint32' to 'float', possible loss of data
+E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(198,31): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(199,31): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
   MyGame.vcxproj -> E:\Uni work\Multiplayer Games Development\CI628\build\Debug\MyGame.exe

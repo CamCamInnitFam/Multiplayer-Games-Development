@@ -16,6 +16,8 @@ static struct GameData {
     int bulletY = 0;
     int cursorX = 0;
     int cursorY = 0;
+    int id = -1;
+    float bulletVelocityX, bulletVelocityY;
 } game_data;
 
 class MyGame {
@@ -23,21 +25,40 @@ class MyGame {
     private:
         SDL_Rect player1 = { 0, 0, 60, 60 };
         SDL_Rect player2 = { 0, 0, 60, 60 };
-        SDL_Rect bullet = { 0, 0, 5, 5 };
-        SDL_Rect block1 = { 600, 340, 60, 120 };
-        SDL_Rect block2 = { 420,220,60, 120};
+        SDL_Rect bullet = { 0, 0, 8, 8 };
+        SDL_Rect block1 = { 600, 380, 60, 120 };
+        SDL_Rect block2 = { 420, 80, 60, 120};
+        SDL_Rect block3 = { 780, 80,  60, 120};
+        SDL_Rect block4 = { 420, 620, 60, 120 };
+        SDL_Rect block5 = { 780, 620, 60, 120 };
         
 
     public:
         std::vector<std::string> messages;
         int prevX, prevY;
+        float predictedX, predictedY;
         bool bulletOnScreen = false;
+        Uint32 nextSendTime = SDL_GetTicks();
+        Uint32 lastFrameTime = SDL_GetTicks();
+        Uint32 lastMessageTime;
+        int currentTurn = 0; //TODO have timer for turn and will auto send (END_TURN) to server
+        float interpolationTime = 0.0f;
+        bool initialSync = true;
+        int numConnectedClients = 1;
 
         void on_receive(std::string message, std::vector<std::string>& args);
         void send(std::string message);
         void input(SDL_Event& event);
         void update();
         void render(SDL_Renderer* renderer);
+        void HeartBeat();
+        int getCurrentTurn();
+        void setCurrentTurn(int);
+        bool isCurrentTurn();
+        void PredictBulletPosition(float delta);
+        void Interpolate(float delta);
+        void syncPlayerPos();
+        int getPlayerId();
 };
 
 #endif
