@@ -297,7 +297,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
             //TODO always send velocity
             if(bullet != null && bullet.isActive())
-                message = "GAME_DATA," + player1.getY() + "," + player1.getX() + "," + player2.getY() + "," + player2.getX() + "," + bullet.getX() + "," + bullet.getY();
+                message = "GAME_DATA," + player1.getY() + "," + player1.getX() + "," + player2.getY() + "," + player2.getX() + "," + bullet.getX() + "," + bullet.getY() + "," + bullet.getComponent(PhysicsComponent.class).getVelocityX() + "," + bullet.getComponent(PhysicsComponent.class).getVelocityY();
             else
                 message = "GAME_DATA," + player1.getY() + "," + player1.getX() + "," + player2.getY() + "," + player2.getX();
 
@@ -721,7 +721,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                     }
 
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    System.out.println(e.getMessage());
                 }
             });
 

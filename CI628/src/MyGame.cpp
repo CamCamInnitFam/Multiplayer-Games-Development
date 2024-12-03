@@ -1,5 +1,6 @@
 #include "MyGame.h"
 #include <iostream>
+#include <SDL_image.h>
 
 void MyGame::on_receive(std::string cmd, std::vector<std::string>& args) {
     lastMessageTime = SDL_GetTicks();
@@ -17,6 +18,22 @@ void MyGame::on_receive(std::string cmd, std::vector<std::string>& args) {
             game_data.player1X = stoi(args.at(1));
             game_data.player2Y = stoi(args.at(2));
             game_data.player2X = stoi(args.at(3));
+            game_data.bulletX = stof(args.at(4));
+            game_data.bulletY = stof(args.at(5));
+        }
+
+        if (args.size() == 8) {
+            game_data.player1Y = stoi(args.at(0));
+            game_data.player1X = stoi(args.at(1));
+            game_data.player2Y = stoi(args.at(2));
+            game_data.player2X = stoi(args.at(3));
+
+            game_data.bulletVelocityX = stof(args.at(6));
+            game_data.bulletVelocityY = stof(args.at(7));
+
+            //bullet_data.rect.x =  stoi(args.at(4));
+           // bullet_data.rect.y = stoi(args.at(5));
+
             game_data.bulletX = stof(args.at(4));
             game_data.bulletY = stof(args.at(5));
         }
@@ -141,40 +158,93 @@ void MyGame::update() {
     
     float deltaTime = SDL_GetTicks() - lastMessageTime / 1000;
     lastMessageTime = SDL_GetTicks();
+    
     //Send heartbeat to server
     HeartBeat();
     
+    //TODO - calc own position +/- 60px per move
+    //TODO - turn limits
+    //TODO - winning and losing
+    //TODO - client side prediction
+
+    bullet_data.prevX = bullet_data.rect.x;
+    bullet_data.rect.x = game_data.bulletX;
+
+    bullet_data.prevY = bullet_data.rect.y;
+    bullet_data.rect.y = game_data.bulletY;
+    
+    bullet_data.prevAngle = bullet_data.angle;
+
+    float velocityX = bullet_data.rect.x - bullet_data.prevX;
+    float velocityY = bullet_data.rect.y - bullet_data.prevY;
+
+    float angleInRadians = std::atan2f(velocityY , velocityX); // radians
+    bullet_data.angle = 180 * angleInRadians / 3.14f; //degrees
+
+    if (bullet_data.angle == 0)
+        bullet_data.angle = bullet_data.prevAngle;
+
     player1.y = game_data.player1Y;
     player1.x = game_data.player1X;
     player2.y = game_data.player2Y;
     player2.x = game_data.player2X;
-    
-    prevX = game_data.cursorX;
-    prevY = game_data.cursorY;
+
+    //Calc Barrel positions
+    player1Barrel.x = player1.x + (player1.w - player1Barrel.w) / 2;
+    player1Barrel.y = player1.y + (player1.h - player1Barrel.h) / 2;
+
+    player2Barrel.x = player2.x + (player2.w - player2Barrel.w) / 2;
+    player2Barrel.y = player2.y + (player2.h - player2Barrel.h) / 2;
+      
+    prevMouseX = game_data.cursorX;
+    prevMouseY = game_data.cursorY;
+
+    //std::cout << bullet_data.angle << std::endl;
     
     SDL_GetMouseState(&game_data.cursorX, &game_data.cursorY);
 
     //only send if changed (minimise traffic) and is current turn
-    if ((game_data.cursorX != prevX || game_data.cursorY != prevY) && isCurrentTurn())    
+    if ((game_data.cursorX != prevMouseX || game_data.cursorY != prevMouseY) && isCurrentTurn())    
         send("MP(" + std::to_string(game_data.cursorX) + "." + std::to_string(game_data.cursorY) + ")");
        
-  
+    
+    angleInRadians = std::atan2f(game_data.cursorX - player1.x, game_data.cursorY - player1.y);
+    p1BarrelAngle = 180 * angleInRadians / 3.14f;
+    //p1BarrelAngle = p1BarrelAngle - 180;
+    
     bullet.x = game_data.bulletX;
     bullet.y = game_data.bulletY;
 }
 
-void MyGame::render(SDL_Renderer* renderer) {
+void MyGame::render(SDL_Renderer* renderer) {   
+    
+    loadTextures(renderer);
+    
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_RenderDrawRect(renderer, &player1);
-    SDL_RenderDrawRect(renderer, &player2);
-    SDL_RenderDrawRect(renderer, &block1);
-    SDL_RenderDrawRect(renderer, &block2);
-    SDL_RenderDrawRect(renderer, &block3);
-    SDL_RenderDrawRect(renderer, &block4);
-    SDL_RenderDrawRect(renderer, &block5);
+   
+    //Render
+
+    SDL_RenderCopy(renderer, backgroundTexture, NULL, &background); //render first as other assets go on top
 
     if (bulletOnScreen)
-        SDL_RenderDrawRect(renderer, &bullet);
+        //SDL_RenderDrawRect(renderer, &bullet);
+        SDL_RenderCopyEx(renderer, bulletTexture, NULL, &bullet_data.rect, bullet_data.angle, NULL, SDL_FLIP_NONE);
+    
+    SDL_RenderCopy(renderer, walls2Texture, NULL, &block1);
+    SDL_RenderCopy(renderer, walls2Texture, NULL, &block2);
+    SDL_RenderCopy(renderer, walls2Texture, NULL, &block3);
+    SDL_RenderCopy(renderer, walls2Texture, NULL, &block4);
+    SDL_RenderCopy(renderer, walls2Texture, NULL, &block5);
+    
+    SDL_RenderCopy(renderer, tankTexture, NULL, &player1);
+    SDL_RenderCopy(renderer, tankTexture, NULL, &player2);
+   // SDL_RenderCopy(renderer, barrelTexture, NULL, &player1Barrel);
+    SDL_RenderCopy(renderer, barrelTexture, NULL, &player2Barrel);
+    
+    //SDL_RenderCopy(renderer, barrelTexture, NULL, &player2Barrel);
+    SDL_RenderCopyEx(renderer, barrelTexture, NULL, &player1Barrel, p1BarrelAngle, NULL, SDL_FLIP_NONE);    
+    //SDL_RenderCopyEx(renderer, tankTexture, NULL, &player1, N, (NULL), SDL_FLIP_NONE);
+    
 }
 
 void MyGame::PredictBulletPosition(float delta) {
@@ -219,4 +289,25 @@ void MyGame::syncPlayerPos() {
 
 int MyGame::getPlayerId() {
     return game_data.id;
+}
+
+void MyGame::loadTextures(SDL_Renderer* renderer) {
+    if (!hasLoadedTextures) {
+        wallTexture = IMG_LoadTexture(renderer, "../assets/walls.jpg");
+        walls2Texture = IMG_LoadTexture(renderer, "../assets/walls2.jpg");
+        tankTexture = IMG_LoadTexture(renderer, "../assets/testTank2.png");
+        barrelTexture = IMG_LoadTexture(renderer, "../assets/barrel.png");
+        backgroundTexture = IMG_LoadTexture(renderer, "../assets/background2.jpg");
+        bulletTexture = IMG_LoadTexture(renderer, "../assets/bullet.png");
+        hasLoadedTextures = true;
+    }
+   
+}
+void MyGame::destroyTextures() {
+    //Destroy Textures // Stop memory leaks
+    SDL_DestroyTexture(backgroundTexture);
+    SDL_DestroyTexture(wallTexture);
+    SDL_DestroyTexture(walls2Texture);
+    SDL_DestroyTexture(tankTexture);
+    SDL_DestroyTexture(barrelTexture);
 }
