@@ -40,6 +40,8 @@ import com.almasb.fxgl.physics.CollisionHandler;
 import com.almasb.fxgl.physics.HitBox;
 import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.ui.UI;
+import javafx.beans.property.FloatProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
 import javafx.util.Duration;
@@ -110,8 +112,12 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
         vars.put("player1score", 0);
         vars.put("player2score", 0);
         vars.put("numClientsConnected", 0);
-    }
+        vars.put("mousePosX", 0.0);
+        vars.put("mousePosY", 0.0);
+        vars.put("p1Rotation", 0.0);
+        vars.put("p2Rotation", 0.0);
 
+    }
 
     @Override
     protected void initGame() {
@@ -126,6 +132,35 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
         initGameObjects();
         initScreenBounds();
+
+
+        getdp("p1Rotation").addListener((notUsed, oldValue, newValue) ->{
+            //TODO
+            System.out.println("rotation Changed! " + newValue);
+
+            for(Connection connection : server.getConnections())
+            {
+                if((boolean)connection.getLocalSessionData().getValue("Connected"))
+                {
+                    int id = (int)connection.getLocalSessionData().getValue("ID");
+                    if(id != activeTurn){
+                        connection.send("BARREL_ROTATION," + newValue);
+                    }
+                }
+            }
+
+            switch(activeTurn){
+                case(0):
+
+                    break;
+
+                case(1):
+                    break;
+            }
+        } );
+
+
+
 
         server = getNetService().newTCPServer(55555, new ServerConfig<>(String.class));
 
@@ -295,7 +330,6 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             //CHECK IF POS HAVE CHANGED FIRST
             //POTENTIALLY STOP BROADCASTING - ONLY SEND CLIENT 1 INFORMATION ABOUT CLIENT 2 ETC? ONLY WHEN CLIENT KNOWS ITS OWN POSITION (which it can calculate easily with +- 40).
 
-            //TODO always send velocity
             if(bullet != null && bullet.isActive())
                 message = "GAME_DATA," + player1.getY() + "," + player1.getX() + "," + player2.getY() + "," + player2.getX() + "," + bullet.getX() + "," + bullet.getY() + "," + bullet.getComponent(PhysicsComponent.class).getVelocityX() + "," + bullet.getComponent(PhysicsComponent.class).getVelocityY();
             else

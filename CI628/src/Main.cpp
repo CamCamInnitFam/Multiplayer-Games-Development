@@ -32,118 +32,145 @@ MyGame* game = new MyGame();
 TCPsocket overallSocket;
 
 static int on_receive(void* socket_ptr) {
-    TCPsocket socket = (TCPsocket)socket_ptr;
 
-    const int message_length = 1024;
+    try
+    {
+        TCPsocket socket = (TCPsocket)socket_ptr;
 
-    char message[message_length];
-    int received;
+        const int message_length = 1024;
 
-    // TODO: while(), rather than do
-    do {
-        received = SDLNet_TCP_Recv(socket, message, message_length);
-        message[received] = '\0';
+        char message[message_length];
+        int received;
 
-        char* pch = strtok(message, ",");
+        // TODO: while(), rather than do
+        do {
+            received = SDLNet_TCP_Recv(socket, message, message_length);
+            message[received] = '\0';
 
-        // get the command, which is the first string in the message
-        string cmd(pch);
+            char* pch = strtok(message, ",");
 
-        // then get the arguments to the command
-        vector<string> args;
+            // get the command, which is the first string in the message
+            string cmd(pch);
 
-        while (pch != NULL) {
-            pch = strtok(NULL, ",");
+            // then get the arguments to the command
+            vector<string> args;
 
-            if (pch != NULL) {
-                args.push_back(string(pch));
+            while (pch != NULL) {
+                pch = strtok(NULL, ",");
+
+                if (pch != NULL) {
+                    args.push_back(string(pch));
+                }
             }
-        }
 
-        if (cmd == "exit")
-            break;
+            if (cmd == "exit")
+                break;
 
-        if (cmd == "CONNECTEVENT") {
-            numConnections = stoi(args.at(0));
-        }
+            if (cmd == "CONNECTEVENT") {
+                numConnections = stoi(args.at(0));
+            }
 
-        if (cmd == "GAMESTATE" || cmd == "GAMESTATEGAME_DATA") { //Sometimes server gets confused. This is a hack.
+            if (cmd == "GAMESTATE" || cmd == "GAMESTATEGAME_DATA") { //Sometimes server gets confused. This is a hack.
                 std::cout << "GameState Recieved" << std::endl;
                 gameActive = true; //allows starting in lobby                                                    
-        }          
-        
-        if (cmd == "GAME_START") 
-            game_started = true; //exits lobby loop, lets program know to kill threads when game is closed
+            }
 
-        game->on_receive(cmd, args);
+            if (cmd == "GAME_START")
+                game_started = true; //exits lobby loop, lets program know to kill threads when game is closed
 
-        if (cmd == "INITIAL_DATA")
-            numConnections = game->numConnectedClients;
-                    
-    } while (received > 0 && is_running);
+            game->on_receive(cmd, args);
 
-    return 0;
+            if (cmd == "INITIAL_DATA")
+                numConnections = game->numConnectedClients;
+
+        } while (received > 0 && is_running);
+
+        return 0;
+    }
+    catch(exception ex)
+    {
+        std::cout << "Server died!";
+        is_running = false;
+        return 0;
+    }
+    
 }
 
 static int on_send(void* socket_ptr) {
-    TCPsocket socket = (TCPsocket)socket_ptr;
+    try 
+    {
+        TCPsocket socket = (TCPsocket)socket_ptr;
 
-    while (is_running) {
-        if (game->messages.size() > 0) {
-            string message = "CLIENT_DATA";
+        while (is_running) {
+            if (game->messages.size() > 0) {
+                string message = "CLIENT_DATA";
 
-            for (auto m : game->messages) {
-                message += "," + m;
+                for (auto m : game->messages) {
+                    message += "," + m;
+                }
+
+                game->messages.clear();
+
+                cout << "Sending_TCP: " << message << endl;
+
+                SDLNet_TCP_Send(socket, message.c_str(), message.length());
             }
 
-            game->messages.clear();
-
-            cout << "Sending_TCP: " << message << endl;
-
-            SDLNet_TCP_Send(socket, message.c_str(), message.length());
+            SDL_Delay(1);
         }
-
-        SDL_Delay(1);
+        return 0;
     }
-
-    return 0;
+    catch (exception ex) {
+        std::cout << "Server Died!";
+        is_running = false;
+        return 0;
+    }
+   
 }
 
 void loop(SDL_Renderer* renderer) {
-    SDL_Event event;
+       
+    try {
+        SDL_Event event;
 
-    while (is_running) {
-        // input
-        while (SDL_PollEvent(&event)) {
-            if ((event.type == SDL_KEYDOWN || event.type == SDL_KEYUP || event.type == SDL_MOUSEBUTTONDOWN) && event.key.repeat == 0) {
-                game->input(event);
+        while (is_running) {
+            // input
+            while (SDL_PollEvent(&event)) {
+                if ((event.type == SDL_KEYDOWN || event.type == SDL_KEYUP || event.type == SDL_MOUSEBUTTONDOWN) && event.key.repeat == 0) {
+                    game->input(event);
 
-                switch (event.key.keysym.sym) {
+                    switch (event.key.keysym.sym) {
                     case SDLK_ESCAPE:
                         is_running = false;
                         break;
 
                     default:
                         break;
+                    }
+                }
+
+                if (event.type == SDL_QUIT) {
+                    is_running = false;
                 }
             }
 
-            if (event.type == SDL_QUIT) {
-                is_running = false;
-            }
+            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+            SDL_RenderClear(renderer);
+
+            game->update();
+
+            game->render(renderer);
+
+            SDL_RenderPresent(renderer);
+
+            SDL_Delay(17);
         }
-
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-        SDL_RenderClear(renderer);
-
-        game->update();
-
-        game->render(renderer);
-
-        SDL_RenderPresent(renderer);
-
-        SDL_Delay(17);
     }
+    catch(exception ex){
+        std::cout << "Server Died!";
+        is_running = false;
+    }
+    
 }
 
 int run_game() {

@@ -71,7 +71,11 @@ void MyGame::on_receive(std::string cmd, std::vector<std::string>& args) {
     else if (cmd == "BULLET_DESPAWN") {
         bulletOnScreen = false;
         std::cout << "Recieved: " << cmd << std::endl;
-    }        
+    }   
+
+    else if (cmd == "BARREL_ROTATION") {
+        game_data.barrelRotation = stof(args.at(0));      
+    }
                           
     else 
         std::cout << "Received: " << cmd << std::endl;
@@ -206,10 +210,41 @@ void MyGame::update() {
     //only send if changed (minimise traffic) and is current turn
     if ((game_data.cursorX != prevMouseX || game_data.cursorY != prevMouseY) && isCurrentTurn())    
         send("MP(" + std::to_string(game_data.cursorX) + "." + std::to_string(game_data.cursorY) + ")");
-       
+
+
+    //Calculate or set rotational values for tank barrels
+    if (isCurrentTurn()) 
+    {
+        if (game_data.id == 0) 
+        {
+            angleInRadians = std::atan2f(game_data.cursorY - player1Barrel.y, game_data.cursorX - player1Barrel.x);
+
+            p1BarrelAngle = 180 * angleInRadians / 3.14f;
+            p1BarrelAngle = p1BarrelAngle - 12; //hack to make more accurate         
+        }
+        else {
+            angleInRadians = std::atan2f(game_data.cursorY - player2Barrel.y, game_data.cursorX - player2Barrel.x);
+
+            p2BarrelAngle = 180 * angleInRadians / 3.14f;
+            p2BarrelAngle = p2BarrelAngle - 12; //hack to make more accurate    
+        }
+    }
+    else {
+        if (game_data.id == 0) {
+            p2BarrelAngle = game_data.barrelRotation;
+        }
+        else if (game_data.id == 1) {
+            p1BarrelAngle = game_data.barrelRotation;
+        }
+        else if (game_data.id == -1) {
+            if (getCurrentTurn() == 0)
+                p1BarrelAngle = game_data.barrelRotation;
+            else
+                p2BarrelAngle = game_data.barrelRotation;
+        }
+    }
+        
     
-    angleInRadians = std::atan2f(game_data.cursorX - player1.x, game_data.cursorY - player1.y);
-    p1BarrelAngle = 180 * angleInRadians / 3.14f;
     //p1BarrelAngle = p1BarrelAngle - 180;
     
     bullet.x = game_data.bulletX;
@@ -239,10 +274,11 @@ void MyGame::render(SDL_Renderer* renderer) {
     SDL_RenderCopy(renderer, tankTexture, NULL, &player1);
     SDL_RenderCopy(renderer, tankTexture, NULL, &player2);
    // SDL_RenderCopy(renderer, barrelTexture, NULL, &player1Barrel);
-    SDL_RenderCopy(renderer, barrelTexture, NULL, &player2Barrel);
+    //SDL_RenderCopy(renderer, barrelTexture, NULL, &player2Barrel);
     
     //SDL_RenderCopy(renderer, barrelTexture, NULL, &player2Barrel);
     SDL_RenderCopyEx(renderer, barrelTexture, NULL, &player1Barrel, p1BarrelAngle, NULL, SDL_FLIP_NONE);    
+    SDL_RenderCopyEx(renderer, barrelTexture, NULL, &player2Barrel, p2BarrelAngle, NULL, SDL_FLIP_NONE);
     //SDL_RenderCopyEx(renderer, tankTexture, NULL, &player1, N, (NULL), SDL_FLIP_NONE);
     
 }

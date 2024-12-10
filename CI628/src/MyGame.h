@@ -17,7 +17,9 @@ static struct GameData {
     int cursorX = 0;
     int cursorY = 0;
     int id = -1;
-    float bulletVelocityX, bulletVelocityY;
+    float bulletVelocityX;
+    float bulletVelocityY;
+    float barrelRotation = 0;
 } game_data;
 
 static struct BulletData {
@@ -67,7 +69,7 @@ class MyGame {
         int numConnectedClients = 1;
         bool hasLoadedTextures = false;
         float p1BarrelAngle = 0;
-        int p2BArrelAngle;
+        int p2BarrelAngle;
 
         void on_receive(std::string message, std::vector<std::string>& args);
         void send(std::string message);

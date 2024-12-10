@@ -26,10 +26,17 @@ public class BarrelComponent extends Component
 
     public void rotateBarrel(int x, int y, int tank){
         double angle = Math.toDegrees(Math.atan2(y - entity.getCenter().getY(), x - entity.getCenter().getX() ));
-        if(tank == 0)
+        if(tank == 0){
             barrelView.setRotate(angle);
-        else
+            FXGL.set("p1Rotation", angle);
+        }
+
+        else{
             barrelView.setRotate(angle - 180);
+            //FXGL.set("p2Rotation", angle);
+            FXGL.set("p1Rotation", angle); //only need one rotational value
+        }
+
     }
     public void resetRotation(int rotation){
         barrelView.setRotate(rotation);
