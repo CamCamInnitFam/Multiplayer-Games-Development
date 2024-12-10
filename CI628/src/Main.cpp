@@ -19,6 +19,7 @@ bool is_connecting = true;
 bool has_made_connection = false;
 int numConnections = 1;
 bool gameActive = false;
+bool quit = false;
 
 struct connectionData 
 {
@@ -42,9 +43,15 @@ static int on_receive(void* socket_ptr) {
         char message[message_length];
         int received;
 
-        // TODO: while(), rather than do
-        do {
+        do {              
             received = SDLNet_TCP_Recv(socket, message, message_length);
+            if (received <= 0) {
+                std::cout << "Nothing to see...";
+                is_running = false;
+                quit = true;
+                break;
+            }
+                    
             message[received] = '\0';
 
             char* pch = strtok(message, ",");
@@ -82,7 +89,7 @@ static int on_receive(void* socket_ptr) {
 
             if (cmd == "INITIAL_DATA")
                 numConnections = game->numConnectedClients;
-
+        
         } while (received > 0 && is_running);
 
         return 0;
@@ -100,6 +107,7 @@ static int on_send(void* socket_ptr) {
     try 
     {
         TCPsocket socket = (TCPsocket)socket_ptr;
+        char message[1024];
 
         while (is_running) {
             if (game->messages.size() > 0) {
@@ -124,8 +132,7 @@ static int on_send(void* socket_ptr) {
         std::cout << "Server Died!";
         is_running = false;
         return 0;
-    }
-   
+    }   
 }
 
 void loop(SDL_Renderer* renderer) {
@@ -133,7 +140,7 @@ void loop(SDL_Renderer* renderer) {
     try {
         SDL_Event event;
 
-        while (is_running) {
+        while (is_running && !quit) {
             // input
             while (SDL_PollEvent(&event)) {
                 if ((event.type == SDL_KEYDOWN || event.type == SDL_KEYUP || event.type == SDL_MOUSEBUTTONDOWN) && event.key.repeat == 0) {
@@ -373,7 +380,7 @@ void load_lobby(SDL_Renderer* renderer, TTF_Font* font)
     SDL_Color red = { 255, 0 , 0, 255 };
     SDL_Color brown = { 139, 69, 19, 255 };
    
-    while (inLobby && !game_started)
+    while (inLobby && !game_started && !quit)
     {
         game->HeartBeat();
         while (SDL_PollEvent(&e))

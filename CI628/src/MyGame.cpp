@@ -90,10 +90,10 @@ void MyGame::on_receive(std::string cmd, std::vector<std::string>& args) {
         connectData.connectionID = stoi(args.at(2));
         checkConnectTextTime = SDL_GetTicks();
         if (args.at(1) == "CONNECT")           
-            connectData.connectMessage = "Player " + (connectData.connectionID == 0 ? std::to_string(connectData.connectionID) : "O") + " Connected!";
+            connectData.connectMessage = "Player " + std::to_string(connectData.connectionID +1)  + " Connected!";
                    
         else if (args.at(1) == "DISCONNECT")
-            connectData.connectMessage = "Player " + std::to_string(connectData.connectionID) + " Disconnected!";
+            connectData.connectMessage = "Player " + std::to_string(connectData.connectionID +1)  + " Disconnected!";
     }
                           
     else 
