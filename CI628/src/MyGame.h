@@ -35,6 +35,7 @@ static struct BulletData {
 
 static struct ConnectData {
     std::string connectMessage = "";
+    std::string oldConnectMessage = "";
     int connectionID;
 } connectData;
 
@@ -81,6 +82,7 @@ class MyGame {
         bool hasLoadedTextures = false;
         float p1BarrelAngle = 0;
         float p2BarrelAngle = 0;
+        Uint32 checkConnectTextTime;
 
         MyGame();
         void on_receive(std::string message, std::vector<std::string>& args);

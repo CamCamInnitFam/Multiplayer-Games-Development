@@ -686,28 +686,16 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                 {
                     switch(key.substring(0, 1)){
                         case("W"):
-                            if(connectionID == 0)
-                                player1Bat.up();
-                            else if(connectionID == 1)
-                                player2Bat.up();
+                            Players.get(connectionID).getComponent(BatComponent.class).up();
                             break;
                         case("A"):
-                            if(connectionID == 0)
-                                player1Bat.left();
-                            else if(connectionID == 1)
-                                player2Bat.left();
+                            Players.get(connectionID).getComponent(BatComponent.class).left();
                             break;
                         case("S"):
-                            if(connectionID == 0)
-                                player1Bat.down();
-                            else if(connectionID == 1)
-                                player2Bat.down();
+                            Players.get(connectionID).getComponent(BatComponent.class).down();
                             break;
                         case("D"):
-                            if(connectionID == 0)
-                                player1Bat.right();
-                            else if(connectionID == 1)
-                                player2Bat.right();
+                            Players.get(connectionID).getComponent(BatComponent.class).right();
                             break;
                     }
                 }

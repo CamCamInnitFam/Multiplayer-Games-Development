@@ -4,8 +4,8 @@
 #include <SDL_ttf.h>
 
 
- MyGame::MyGame() {
-     
+MyGame::MyGame() {
+
 }
 
 void MyGame::on_receive(std::string cmd, std::vector<std::string>& args) {
@@ -36,9 +36,6 @@ void MyGame::on_receive(std::string cmd, std::vector<std::string>& args) {
 
             game_data.bulletVelocityX = stof(args.at(6));
             game_data.bulletVelocityY = stof(args.at(7));
-
-            //bullet_data.rect.x =  stoi(args.at(4));
-           // bullet_data.rect.y = stoi(args.at(5));
 
             game_data.bulletX = stof(args.at(4));
             game_data.bulletY = stof(args.at(5));
@@ -91,10 +88,12 @@ void MyGame::on_receive(std::string cmd, std::vector<std::string>& args) {
         //numConnectedClients = stoi(args.at(0));
         std::cout << "Recieved ConnectEvent!" << std::endl;
         connectData.connectionID = stoi(args.at(2));
-        if (args.at(1) == "CONNECT")
-            connectData.connectMessage = "Client " + std::to_string(connectData.connectionID) + " Connected!";
+        checkConnectTextTime = SDL_GetTicks();
+        if (args.at(1) == "CONNECT")           
+            connectData.connectMessage = "Player " + (connectData.connectionID == 0 ? std::to_string(connectData.connectionID) : "O") + " Connected!";
+                   
         else if (args.at(1) == "DISCONNECT")
-            connectData.connectMessage = "Client " + std::to_string(connectData.connectionID) + " Disconnected!";
+            connectData.connectMessage = "Player " + std::to_string(connectData.connectionID) + " Disconnected!";
     }
                           
     else 
@@ -276,47 +275,58 @@ void MyGame::render(SDL_Renderer* renderer) {
     loadAssets(renderer);
     
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_Color white = { 255, 255, 255, 255 };
+    SDL_Color green = { 0, 255, 0, 255 };
+    SDL_Color red = { 255, 0 , 0, 255 };
    
     //Render
 
+    //background
     SDL_RenderCopy(renderer, backgroundTexture, NULL, &background); //render first as other assets go on top
 
+    //bullet
     if (bulletOnScreen)
         SDL_RenderCopyEx(renderer, bulletTexture, NULL, &bullet_data.rect, bullet_data.angle, NULL, SDL_FLIP_NONE);
-    
+       
+    //walls
     SDL_RenderCopy(renderer, walls2Texture, NULL, &block1);
     SDL_RenderCopy(renderer, walls2Texture, NULL, &block2);
     SDL_RenderCopy(renderer, walls2Texture, NULL, &block3);
     SDL_RenderCopy(renderer, walls2Texture, NULL, &block4);
     SDL_RenderCopy(renderer, walls2Texture, NULL, &block5);
-    
+       
+    //tanks
     SDL_RenderCopy(renderer, tankTexture, NULL, &player1);
     SDL_RenderCopy(renderer, tankTexture, NULL, &player2);
-
     SDL_RenderCopyEx(renderer, barrelTexture, NULL, &player1Barrel, p1BarrelAngle, NULL, SDL_FLIP_NONE);    
     SDL_RenderCopyEx(renderer, barrelTexture, NULL, &player2Barrel, p2BarrelAngle, NULL, SDL_FLIP_NONE);
 
-
     //Game Text
-    std::string p1Text = "PLAYER 1 SCORE | O";
-    std::string p2Text = "PLAYER 2 SCORE | O";
-    SDL_Color white = { 255, 255, 255, 255 };
+    std::string p1Text = "PLAYER 1 SCORE  I  O"; //I is seperator, O is 0
+    std::string p2Text = "PLAYER 2 SCORE  I  O";
+    if (SDL_GetTicks() > checkConnectTextTime + 3000)
+        connectData.connectMessage = "";
+            
     SDL_Rect p1ScoreRect = { 100,0,250,60 };
     SDL_Rect p2ScoreRect = { 800,0,250,60 };
-    SDL_Rect connectRect = { 0,100,300,60};
+    SDL_Rect connectRect = { 20,100,250,40};
 
-    SDL_Texture* p1Label = renderText(game_data.p1Score > 0 ? ("PLAYER 1 SCORE | " + std::to_string(game_data.p1Score)).c_str() : p1Text.c_str(), font, white, renderer);
-    SDL_Texture* p2Label = renderText(game_data.p2Score > 0 ? ("PLAYER 2 SCORE | " + std::to_string(game_data.p2Score)).c_str() : p2Text.c_str(), font, white, renderer);
-    SDL_Texture* connectLabel = renderText(connectData.connectMessage.c_str(), font, white, renderer);
+    //Textures (text)
+    bool connected = connectData.connectMessage.find("Connected") != std::string::npos;
+    SDL_Texture* p1Label = renderText(game_data.p1Score > 0 ? ("PLAYER 1 SCORE  I  " + std::to_string(game_data.p1Score)).c_str() : p1Text.c_str(), font, white, renderer);
+    SDL_Texture* p2Label = renderText(game_data.p2Score > 0 ? ("PLAYER 2 SCORE  I  " + std::to_string(game_data.p2Score)).c_str() : p2Text.c_str(), font, white, renderer);
+    SDL_Texture* connectLabel = renderText(connectData.connectMessage.c_str(), font, connected ? green : red, renderer);
+
     
+    //RenderCopy Text
     SDL_RenderCopy(renderer, p1Label, NULL, &p1ScoreRect);
     SDL_RenderCopy(renderer, p2Label, NULL, &p2ScoreRect);
     SDL_RenderCopy(renderer, connectLabel, NULL, &connectRect);
-
+    
+    //Destroy
     SDL_DestroyTexture(p1Label);
     SDL_DestroyTexture(p2Label);
-    SDL_DestroyTexture(connectLabel);
-    
+    SDL_DestroyTexture(connectLabel);    
 }
 
 void MyGame::PredictBulletPosition(float delta) {
@@ -386,6 +396,7 @@ void MyGame::destroyTextures() {
     SDL_DestroyTexture(walls2Texture);
     SDL_DestroyTexture(tankTexture);
     SDL_DestroyTexture(barrelTexture);
+
 }
 
 SDL_Texture* MyGame:: renderText(const char* message, TTF_Font* font, SDL_Color color, SDL_Renderer* renderer) {

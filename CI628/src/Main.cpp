@@ -529,6 +529,7 @@ int main(int argc, char** argv) {
         SDL_WaitThread(sendThread, &threadReturnValue);
     }
    
+   // game->destroyTextures();
     delete game;
       
     // Close connection to the server

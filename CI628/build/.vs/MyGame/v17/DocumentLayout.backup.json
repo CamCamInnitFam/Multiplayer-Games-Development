@@ -3,16 +3,13 @@
   "WorkspaceRootPath": "E:\\Uni work\\Multiplayer Games Development\\CI628\\build\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{977B2EB9-4E3F-3210-BA60-B8ECC6895EAC}|MyGame.vcxproj|E:\\Uni work\\Multiplayer Games Development\\CI628\\src\\Main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{977B2EB9-4E3F-3210-BA60-B8ECC6895EAC}|MyGame.vcxproj|E:\\Uni work\\Multiplayer Games Development\\CI628\\src\\MyGame.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{977B2EB9-4E3F-3210-BA60-B8ECC6895EAC}|MyGame.vcxproj|E:\\Uni work\\Multiplayer Games Development\\CI628\\src\\MyGame.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{977B2EB9-4E3F-3210-BA60-B8ECC6895EAC}|MyGame.vcxproj|E:\\Uni work\\Multiplayer Games Development\\CI628\\src\\Main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|E:\\Program Files\\VC\\Tools\\MSVC\\14.41.34120\\crt\\src\\vcruntime\\gs_report.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{977B2EB9-4E3F-3210-BA60-B8ECC6895EAC}|MyGame.vcxproj|E:\\Uni work\\Multiplayer Games Development\\CI628\\src\\MyGame.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
   "DocumentGroupContainers": [
@@ -22,21 +19,8 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 1,
           "Children": [
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "gs_report.c",
-              "DocumentMoniker": "E:\\Program Files\\VC\\Tools\\MSVC\\14.41.34120\\crt\\src\\vcruntime\\gs_report.c",
-              "RelativeDocumentMoniker": "..\\..\\..\\..\\Program Files\\VC\\Tools\\MSVC\\14.41.34120\\crt\\src\\vcruntime\\gs_report.c",
-              "ToolTip": "E:\\Program Files\\VC\\Tools\\MSVC\\14.41.34120\\crt\\src\\vcruntime\\gs_report.c",
-              "RelativeToolTip": "..\\..\\..\\..\\Program Files\\VC\\Tools\\MSVC\\14.41.34120\\crt\\src\\vcruntime\\gs_report.c",
-              "ViewState": "AgIAAKQBAAAAAAAAAAAAwNABAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000423|",
-              "WhenOpened": "2024-11-27T16:47:12.429Z",
-              "EditorCaption": ""
-            },
             {
               "$type": "Document",
               "DocumentIndex": 2,
@@ -45,31 +29,33 @@
               "RelativeDocumentMoniker": "..\\src\\MyGame.h",
               "ToolTip": "E:\\Uni work\\Multiplayer Games Development\\CI628\\src\\MyGame.h",
               "RelativeToolTip": "..\\src\\MyGame.h",
-              "ViewState": "AgIAABcAAAAAAAAAAAAiwC4AAAAfAAAAAAAAAA==",
+              "ViewState": "AgIAABEAAAAAAAAAAAAiwD4AAAAjAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2024-10-31T14:10:13.586Z"
+              "WhenOpened": "2024-10-31T14:10:13.586Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 0,
               "Title": "MyGame.cpp",
               "DocumentMoniker": "E:\\Uni work\\Multiplayer Games Development\\CI628\\src\\MyGame.cpp",
               "RelativeDocumentMoniker": "..\\src\\MyGame.cpp",
               "ToolTip": "E:\\Uni work\\Multiplayer Games Development\\CI628\\src\\MyGame.cpp",
               "RelativeToolTip": "..\\src\\MyGame.cpp",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAADgAAAAFAAAAAAAAAA==",
+              "ViewState": "AgIAAPsAAAAAAAAAAAAAADEBAAAwAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2024-10-23T19:20:00.732Z"
+              "WhenOpened": "2024-10-23T19:20:00.732Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "Main.cpp",
               "DocumentMoniker": "E:\\Uni work\\Multiplayer Games Development\\CI628\\src\\Main.cpp",
               "RelativeDocumentMoniker": "..\\src\\Main.cpp",
               "ToolTip": "E:\\Uni work\\Multiplayer Games Development\\CI628\\src\\Main.cpp",
               "RelativeToolTip": "..\\src\\Main.cpp",
-              "ViewState": "AgIAABsAAAAAAAAAAAAAAFEAAAAUAAAAAAAAAA==",
+              "ViewState": "AgIAALgBAAAAAAAAAAAAAB8CAAANAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2024-10-23T19:19:59.424Z",
               "EditorCaption": ""
