@@ -6,6 +6,7 @@
 #include <string>
 
 #include "SDL.h"
+#include <SDL_ttf.h>
 
 static struct GameData {
     int player1Y = 0;
@@ -20,6 +21,8 @@ static struct GameData {
     float bulletVelocityX;
     float bulletVelocityY;
     float barrelRotation = 0;
+    int p1Score = 0;
+    int p2Score = 0;
 } game_data;
 
 static struct BulletData {
@@ -29,6 +32,11 @@ static struct BulletData {
     float angle = 0;
     float prevAngle = 0;
 } bullet_data;
+
+static struct ConnectData {
+    std::string connectMessage = "";
+    int connectionID;
+} connectData;
 
 class MyGame {
 
@@ -52,6 +60,9 @@ class MyGame {
         SDL_Texture* barrelTexture;
         SDL_Texture* backgroundTexture;
         SDL_Texture* bulletTexture;
+
+        //Font
+        TTF_Font* font;
         
     public:
         std::vector<std::string> messages;
@@ -69,8 +80,9 @@ class MyGame {
         int numConnectedClients = 1;
         bool hasLoadedTextures = false;
         float p1BarrelAngle = 0;
-        int p2BarrelAngle;
+        float p2BarrelAngle = 0;
 
+        MyGame();
         void on_receive(std::string message, std::vector<std::string>& args);
         void send(std::string message);
         void input(SDL_Event& event);
@@ -84,8 +96,9 @@ class MyGame {
         void Interpolate(float delta);
         void syncPlayerPos();
         int getPlayerId();
-        void loadTextures(SDL_Renderer* renderer);
+        void loadAssets(SDL_Renderer* renderer);
         void destroyTextures();
+        SDL_Texture* renderText(const char* message, TTF_Font* font, SDL_Color color, SDL_Renderer* renderer);
 };
 
 #endif

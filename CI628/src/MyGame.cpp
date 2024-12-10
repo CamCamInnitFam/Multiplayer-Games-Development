@@ -1,6 +1,12 @@
 #include "MyGame.h"
 #include <iostream>
 #include <SDL_image.h>
+#include <SDL_ttf.h>
+
+
+ MyGame::MyGame() {
+     
+}
 
 void MyGame::on_receive(std::string cmd, std::vector<std::string>& args) {
     lastMessageTime = SDL_GetTicks();
@@ -75,6 +81,20 @@ void MyGame::on_receive(std::string cmd, std::vector<std::string>& args) {
 
     else if (cmd == "BARREL_ROTATION") {
         game_data.barrelRotation = stof(args.at(0));      
+    }
+
+    else if (cmd == "SCORES") {
+        game_data.p1Score = stoi(args.at(0));
+        game_data.p2Score = stoi(args.at(1));
+    }
+    else if (cmd == "CONNECTEVENT") {
+        //numConnectedClients = stoi(args.at(0));
+        std::cout << "Recieved ConnectEvent!" << std::endl;
+        connectData.connectionID = stoi(args.at(2));
+        if (args.at(1) == "CONNECT")
+            connectData.connectMessage = "Client " + std::to_string(connectData.connectionID) + " Connected!";
+        else if (args.at(1) == "DISCONNECT")
+            connectData.connectMessage = "Client " + std::to_string(connectData.connectionID) + " Disconnected!";
     }
                           
     else 
@@ -253,7 +273,7 @@ void MyGame::update() {
 
 void MyGame::render(SDL_Renderer* renderer) {   
     
-    loadTextures(renderer);
+    loadAssets(renderer);
     
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
    
@@ -262,7 +282,6 @@ void MyGame::render(SDL_Renderer* renderer) {
     SDL_RenderCopy(renderer, backgroundTexture, NULL, &background); //render first as other assets go on top
 
     if (bulletOnScreen)
-        //SDL_RenderDrawRect(renderer, &bullet);
         SDL_RenderCopyEx(renderer, bulletTexture, NULL, &bullet_data.rect, bullet_data.angle, NULL, SDL_FLIP_NONE);
     
     SDL_RenderCopy(renderer, walls2Texture, NULL, &block1);
@@ -273,13 +292,30 @@ void MyGame::render(SDL_Renderer* renderer) {
     
     SDL_RenderCopy(renderer, tankTexture, NULL, &player1);
     SDL_RenderCopy(renderer, tankTexture, NULL, &player2);
-   // SDL_RenderCopy(renderer, barrelTexture, NULL, &player1Barrel);
-    //SDL_RenderCopy(renderer, barrelTexture, NULL, &player2Barrel);
-    
-    //SDL_RenderCopy(renderer, barrelTexture, NULL, &player2Barrel);
+
     SDL_RenderCopyEx(renderer, barrelTexture, NULL, &player1Barrel, p1BarrelAngle, NULL, SDL_FLIP_NONE);    
     SDL_RenderCopyEx(renderer, barrelTexture, NULL, &player2Barrel, p2BarrelAngle, NULL, SDL_FLIP_NONE);
-    //SDL_RenderCopyEx(renderer, tankTexture, NULL, &player1, N, (NULL), SDL_FLIP_NONE);
+
+
+    //Game Text
+    std::string p1Text = "PLAYER 1 SCORE | O";
+    std::string p2Text = "PLAYER 2 SCORE | O";
+    SDL_Color white = { 255, 255, 255, 255 };
+    SDL_Rect p1ScoreRect = { 100,0,250,60 };
+    SDL_Rect p2ScoreRect = { 800,0,250,60 };
+    SDL_Rect connectRect = { 0,100,300,60};
+
+    SDL_Texture* p1Label = renderText(game_data.p1Score > 0 ? ("PLAYER 1 SCORE | " + std::to_string(game_data.p1Score)).c_str() : p1Text.c_str(), font, white, renderer);
+    SDL_Texture* p2Label = renderText(game_data.p2Score > 0 ? ("PLAYER 2 SCORE | " + std::to_string(game_data.p2Score)).c_str() : p2Text.c_str(), font, white, renderer);
+    SDL_Texture* connectLabel = renderText(connectData.connectMessage.c_str(), font, white, renderer);
+    
+    SDL_RenderCopy(renderer, p1Label, NULL, &p1ScoreRect);
+    SDL_RenderCopy(renderer, p2Label, NULL, &p2ScoreRect);
+    SDL_RenderCopy(renderer, connectLabel, NULL, &connectRect);
+
+    SDL_DestroyTexture(p1Label);
+    SDL_DestroyTexture(p2Label);
+    SDL_DestroyTexture(connectLabel);
     
 }
 
@@ -327,7 +363,7 @@ int MyGame::getPlayerId() {
     return game_data.id;
 }
 
-void MyGame::loadTextures(SDL_Renderer* renderer) {
+void MyGame::loadAssets(SDL_Renderer* renderer) {
     if (!hasLoadedTextures) {
         wallTexture = IMG_LoadTexture(renderer, "../assets/walls.jpg");
         walls2Texture = IMG_LoadTexture(renderer, "../assets/walls2.jpg");
@@ -335,9 +371,13 @@ void MyGame::loadTextures(SDL_Renderer* renderer) {
         barrelTexture = IMG_LoadTexture(renderer, "../assets/barrel.png");
         backgroundTexture = IMG_LoadTexture(renderer, "../assets/background2.jpg");
         bulletTexture = IMG_LoadTexture(renderer, "../assets/bullet.png");
+        font = TTF_OpenFont("../assets/fonts/Hey Comic.ttf", 25);
+        if (!font) {
+            printf("Failed to load font! TTF_Error: %s\n", TTF_GetError());
+            exit(6);
+        }
         hasLoadedTextures = true;
-    }
-   
+    }   
 }
 void MyGame::destroyTextures() {
     //Destroy Textures // Stop memory leaks
@@ -346,4 +386,11 @@ void MyGame::destroyTextures() {
     SDL_DestroyTexture(walls2Texture);
     SDL_DestroyTexture(tankTexture);
     SDL_DestroyTexture(barrelTexture);
+}
+
+SDL_Texture* MyGame:: renderText(const char* message, TTF_Font* font, SDL_Color color, SDL_Renderer* renderer) {
+    SDL_Surface* surface = TTF_RenderText_Solid(font, message, color);
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    return texture;
 }

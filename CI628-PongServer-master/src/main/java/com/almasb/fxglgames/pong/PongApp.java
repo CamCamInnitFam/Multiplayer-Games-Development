@@ -199,7 +199,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             connection.send("INITIAL_DATA," + connection.getLocalSessionData().getValue("ID") + "," + geti("numClientsConnected") + "," + String.valueOf(activeTurn));
             FXGL.getGameTimer().runOnceAfter(() -> {
                 // Code to run after the wait
-                server.broadcast("CONNECTEVENT," + geti("numClientsConnected"));
+                server.broadcast("CONNECTEVENT," + geti("numClientsConnected") + "," + "CONNECT" + "," + connection.getLocalSessionData().getValue("ID"));
             }, Duration.seconds(0.5));
 
             //Use runOnce to send another message to the client
@@ -225,8 +225,8 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
         server.setOnDisconnected(connection -> {
             System.out.println("CLIENT DISCONNECT");
             inc("numClientsConnected", -1);
-            connection.send("CONNECTEVENT," + geti("numClientsConnected"));
-            server.broadcast("CONNECTEVENT," + geti("numClientsConnected"));
+            //connection.send("CONNECTEVENT," + geti("numClientsConnected") + "," + "DISCONNECT");
+            server.broadcast("CONNECTEVENT," + geti("numClientsConnected") + "," + "DISCONNECT");
             int connectionID = connection.getLocalSessionData().getValue("ID");
 
             if(connectionID == -1)
@@ -371,6 +371,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                     System.out.println("Client " + connectionID + " disconnected!");
                     connection.getLocalSessionData().setValue("Connected", false);
                     inc("numClientsConnected", -1);
+                    server.broadcast("CONNECTEVENT," + geti("numClientsConnected") + "," + "DISCONNECT" + "," + connectionID);
 
                     //If not a spectator, make linked player disconnect
                     if(connectionID != -1)
@@ -527,6 +528,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             if(System.currentTimeMillis() > lastHeartBeatTime + 4000){
                 //connection.terminate();
                 int connectionID = connection.getLocalSessionData().getValue("ID");
+                //server.broadcast("CONNECTEVENT," + geti("numClientsConnected") + "," + "DISCONNECT" + "," + connectionID);
                 System.out.println("Client " + connectionID + " disconnected!");
                 connection.getLocalSessionData().setValue("Connected", false);
                 inc("numClientsConnected", -1);
