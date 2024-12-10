@@ -64,6 +64,8 @@ class MyGame {
 
         //Font
         TTF_Font* font;
+
+        int maxMoves = 12; // divide by 2 for 6 max moves
         
     public:
         std::vector<std::string> messages;
@@ -83,6 +85,8 @@ class MyGame {
         float p1BarrelAngle = 0;
         float p2BarrelAngle = 0;
         Uint32 checkConnectTextTime;
+        bool hasShot = false;
+        int numMoves = 0;
 
         MyGame();
         void on_receive(std::string message, std::vector<std::string>& args);

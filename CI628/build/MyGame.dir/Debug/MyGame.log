@@ -5,13 +5,13 @@ E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(40,37): warning C
 E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(41,37): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
 E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(70,33): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
 E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(71,33): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(182,21): warning C4244: 'initializing': conversion from 'Uint32' to 'float', possible loss of data
-E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(201,21): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
-E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(202,21): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
-E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(239,97): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(239,60): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(245,97): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(245,60): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(350,31): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
-E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(351,31): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(204,21): warning C4244: 'initializing': conversion from 'Uint32' to 'float', possible loss of data
+E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(231,21): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(232,21): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(269,97): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(269,60): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(275,97): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(275,60): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(377,31): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(378,31): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
   MyGame.vcxproj -> E:\Uni work\Multiplayer Games Development\CI628\build\Debug\MyGame.exe

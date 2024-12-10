@@ -123,14 +123,14 @@ void MyGame::input(SDL_Event& event)
 
     if (event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) 
     {
-        if (event.button.button == 1) { //left click                        
+        if (event.button.button == 1 && !hasShot) { //left click                        
             //Send Input                                    
             send("LMB_DOWN");
             SDL_Delay(100);
             send("LMB_UP");
-            send(std::to_string(game_data.id));
-
+            //send(std::to_string(game_data.id));
             //send(event.type == SDL_MOUSEBUTTONDOWN ? "LMB_DOWN" : "LMB_UP");
+            hasShot = true;
         }
         return;
     }
@@ -138,27 +138,45 @@ void MyGame::input(SDL_Event& event)
     switch (event.key.keysym.sym) {
         //up and down
     case SDLK_w:
-        send(event.type == SDL_KEYDOWN ? "W_DOWN" : "W_UP");
+        if (numMoves < maxMoves) {
+            send(event.type == SDL_KEYDOWN ? "W_DOWN" : "W_UP");
+            numMoves++;
+        }       
         break;
     case SDLK_s:
-        send(event.type == SDL_KEYDOWN ? "S_DOWN" : "S_UP");
+        if (numMoves < maxMoves){
+            send(event.type == SDL_KEYDOWN ? "S_DOWN" : "S_UP");
+            numMoves++;
+        }
+        
         break;
 
         //move left and right
     case SDLK_a:
-        send(event.type == SDL_KEYDOWN ? "A_DOWN" : "A_UP");
+        if (numMoves < maxMoves) {
+            send(event.type == SDL_KEYDOWN ? "A_DOWN" : "A_UP");
+            numMoves++;
+        }    
         break;
     case SDLK_d:
-        send(event.type == SDL_KEYDOWN ? "D_DOWN" : "D_UP");
+        if (numMoves < maxMoves) {
+            send(event.type == SDL_KEYDOWN ? "D_DOWN" : "D_UP");
+            numMoves++;
+        }      
         break;
 
         //Turn end
     case SDLK_SPACE:
+        //Send to Server 
         send("TURN_END");
-        if (game_data.id == 0 && isCurrentTurn())
-            setCurrentTurn(1);
-        if (game_data.id == 1 && isCurrentTurn())
-            setCurrentTurn(0);
+
+        //Change Turn Locally
+        currentTurn = currentTurn == 0 ? 1 : 0;
+
+        //Reset Turn info
+        numMoves = 0;
+        hasShot = false;
+
         break;       
 
         //up and down (archived)
@@ -184,6 +202,14 @@ void MyGame::update() {
     
     //Send heartbeat to server
     HeartBeat();
+
+    if (hasShot && numMoves >= maxMoves && !bulletOnScreen) {
+        SDL_Delay(100);
+        send("TURN_END");
+        hasShot = false;
+        numMoves = 0;
+        currentTurn = currentTurn = 0 ? 1 : 0;
+    }
     
     //TODO - calc own position +/- 60px per move
     //TODO - turn limits
@@ -262,10 +288,7 @@ void MyGame::update() {
                 p2BarrelAngle = game_data.barrelRotation;
         }
     }
-        
-    
-    //p1BarrelAngle = p1BarrelAngle - 180;
-    
+           
     bullet.x = game_data.bulletX;
     bullet.y = game_data.bulletY;
 }
