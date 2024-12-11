@@ -15,7 +15,6 @@ const Uint16 PORT = 55555;
 
 bool is_running = true;
 bool game_started = false;
-bool is_connecting = true;
 bool has_made_connection = false;
 int numConnections = 1;
 bool gameActive = false;

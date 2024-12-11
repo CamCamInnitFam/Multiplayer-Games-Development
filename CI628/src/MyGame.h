@@ -64,6 +64,7 @@ class MyGame {
 
         //Font
         TTF_Font* font;
+        TTF_Font* freshmanFont;
 
         int maxMoves = 12; // divide by 2 for 6 max moves
         
@@ -87,6 +88,7 @@ class MyGame {
         Uint32 checkConnectTextTime;
         bool hasShot = false;
         int numMoves = 0;
+        bool isServerActive = true;
 
         MyGame();
         void on_receive(std::string message, std::vector<std::string>& args);
@@ -105,6 +107,7 @@ class MyGame {
         void loadAssets(SDL_Renderer* renderer);
         void destroyTextures();
         SDL_Texture* renderText(const char* message, TTF_Font* font, SDL_Color color, SDL_Renderer* renderer);
+        void setServerActive(bool isActive);
 };
 
 #endif

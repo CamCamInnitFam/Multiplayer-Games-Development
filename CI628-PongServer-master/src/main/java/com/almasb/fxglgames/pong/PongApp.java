@@ -680,8 +680,6 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             }else{
                 //keyboard
                 if (key.endsWith("_DOWN"))
-                //TODO could do up() down() left() and right() and pass in the connection. Then check connection
-                    //here and provide p1bat or p2bat (tank) movement
                 //TODO change player1Bat to be player1Tank
                 {
                     switch(key.substring(0, 1)){

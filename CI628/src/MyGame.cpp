@@ -86,14 +86,22 @@ void MyGame::on_receive(std::string cmd, std::vector<std::string>& args) {
     }
     else if (cmd == "CONNECTEVENT") {
         //numConnectedClients = stoi(args.at(0));
-        std::cout << "Recieved ConnectEvent!" << std::endl;
         connectData.connectionID = stoi(args.at(2));
         checkConnectTextTime = SDL_GetTicks();
-        if (args.at(1) == "CONNECT")           
-            connectData.connectMessage = "Player " + std::to_string(connectData.connectionID +1)  + " Connected!";
-                   
-        else if (args.at(1) == "DISCONNECT")
-            connectData.connectMessage = "Player " + std::to_string(connectData.connectionID +1)  + " Disconnected!";
+
+        if (args.at(1) == "CONNECT") {
+            if (connectData.connectionID != -1)
+                connectData.connectMessage = "Player " + std::to_string(connectData.connectionID + 1) + " Connected!";
+            else
+                connectData.connectMessage = "Spectator Connected!";
+        }
+
+        else if (args.at(1) == "DISCONNECT") {
+            if (connectData.connectionID != -1)
+                connectData.connectMessage = "Player " + std::to_string(connectData.connectionID + 1) + " Disconnected!";
+            else
+                connectData.connectMessage = "Spectator Disconnected!";
+        }         
     }
                           
     else 
@@ -325,31 +333,56 @@ void MyGame::render(SDL_Renderer* renderer) {
     SDL_RenderCopyEx(renderer, barrelTexture, NULL, &player2Barrel, p2BarrelAngle, NULL, SDL_FLIP_NONE);
 
     //Game Text
-    std::string p1Text = "PLAYER 1 SCORE  I  O"; //I is seperator, O is 0
-    std::string p2Text = "PLAYER 2 SCORE  I  O";
+    std::string p1Text = "PLAYER 1 SCORE  O"; //I is seperator, O is 0
+    std::string p2Text = "PLAYER 2 SCORE  O";
+    std::string movesLeftText = "Moves Left   " + (maxMoves-numMoves == 0 ? "O" : std::to_string((maxMoves - numMoves)/2));
+    std::string bulletsLeftText = "Bullets Left   " + std::string(hasShot ? "O" : "1");
+    std::string playerTurnText = "Player Turn ";
+    std::string turnNumberText = std::to_string(getCurrentTurn() + 1);
     if (SDL_GetTicks() > checkConnectTextTime + 3000)
         connectData.connectMessage = "";
+
+    if (game_data.id == -1) //spectator
+    {
+        movesLeftText = "";
+        bulletsLeftText = "";
+    }
             
-    SDL_Rect p1ScoreRect = { 100,0,250,60 };
-    SDL_Rect p2ScoreRect = { 800,0,250,60 };
-    SDL_Rect connectRect = { 20,100,250,40};
+    SDL_Rect p1ScoreRect = { 100,0,250,50 };
+    SDL_Rect p2ScoreRect = { 850,0,250,50 };
+    SDL_Rect connectRect = { 20,780,250,40};
+    SDL_Rect playerTurnRect = { 20,70,200,40 };
+    SDL_Rect turnNumberRect = { 230,75,15,40 };
+    SDL_Rect movesLeftRect = { 20,150,200,40 };
+    SDL_Rect shotsLeftRect = { 20,200,205,40 };
 
     //Textures (text)
     bool connected = connectData.connectMessage.find("Connected") != std::string::npos;
-    SDL_Texture* p1Label = renderText(game_data.p1Score > 0 ? ("PLAYER 1 SCORE  I  " + std::to_string(game_data.p1Score)).c_str() : p1Text.c_str(), font, white, renderer);
-    SDL_Texture* p2Label = renderText(game_data.p2Score > 0 ? ("PLAYER 2 SCORE  I  " + std::to_string(game_data.p2Score)).c_str() : p2Text.c_str(), font, white, renderer);
+    SDL_Texture* p1Label = renderText(game_data.p1Score > 0 ? ("PLAYER 1 SCORE   " + std::to_string(game_data.p1Score)).c_str() : p1Text.c_str(), font, white, renderer);
+    SDL_Texture* p2Label = renderText(game_data.p2Score > 0 ? ("PLAYER 2 SCORE   " + std::to_string(game_data.p2Score)).c_str() : p2Text.c_str(), font, white, renderer);
     SDL_Texture* connectLabel = renderText(connectData.connectMessage.c_str(), font, connected ? green : red, renderer);
-
+    SDL_Texture* turnLabel = renderText(playerTurnText.c_str(), font, white, renderer);
+    SDL_Texture* turnNumberLabel = renderText(turnNumberText.c_str(), freshmanFont, isCurrentTurn() ? green : red, renderer);
+    SDL_Texture* movesLeftLabel = renderText(movesLeftText.c_str(), font, white, renderer);
+    SDL_Texture* shotsLeftLabel = renderText(bulletsLeftText.c_str(), font, white, renderer);
     
     //RenderCopy Text
     SDL_RenderCopy(renderer, p1Label, NULL, &p1ScoreRect);
     SDL_RenderCopy(renderer, p2Label, NULL, &p2ScoreRect);
     SDL_RenderCopy(renderer, connectLabel, NULL, &connectRect);
+    SDL_RenderCopy(renderer, turnLabel, NULL, &playerTurnRect);
+    SDL_RenderCopy(renderer, turnNumberLabel, NULL, &turnNumberRect);
+    SDL_RenderCopy(renderer, movesLeftLabel, NULL, &movesLeftRect);
+    SDL_RenderCopy(renderer, shotsLeftLabel, NULL, &shotsLeftRect);
     
     //Destroy
     SDL_DestroyTexture(p1Label);
     SDL_DestroyTexture(p2Label);
     SDL_DestroyTexture(connectLabel);    
+    SDL_DestroyTexture(turnLabel);
+    SDL_DestroyTexture(turnNumberLabel);
+    SDL_DestroyTexture(movesLeftLabel);
+    SDL_DestroyTexture(shotsLeftLabel);
 }
 
 void MyGame::PredictBulletPosition(float delta) {
@@ -409,6 +442,11 @@ void MyGame::loadAssets(SDL_Renderer* renderer) {
             printf("Failed to load font! TTF_Error: %s\n", TTF_GetError());
             exit(6);
         }
+        freshmanFont = TTF_OpenFont("../assets/fonts/Freshman.ttf", 15);
+        if (!freshmanFont) {
+            printf("Failed to load font! TTF_Error: %s\n", TTF_GetError());
+            exit(6);
+        }
         hasLoadedTextures = true;
     }   
 }
@@ -427,4 +465,7 @@ SDL_Texture* MyGame:: renderText(const char* message, TTF_Font* font, SDL_Color 
     SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
     SDL_FreeSurface(surface);
     return texture;
+}
+void MyGame::setServerActive(bool isActive) {
+    isServerActive = isActive;
 }
