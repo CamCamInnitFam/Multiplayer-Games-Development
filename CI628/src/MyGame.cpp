@@ -86,22 +86,24 @@ void MyGame::on_receive(std::string cmd, std::vector<std::string>& args) {
     }
     else if (cmd == "CONNECTEVENT") {
         //numConnectedClients = stoi(args.at(0));
-        connectData.connectionID = stoi(args.at(2));
-        checkConnectTextTime = SDL_GetTicks();
+        if (args.size() > 1) {
+            connectData.connectionID = stoi(args.at(2));
+            checkConnectTextTime = SDL_GetTicks();
 
-        if (args.at(1) == "CONNECT") {
-            if (connectData.connectionID != -1)
-                connectData.connectMessage = "Player " + std::to_string(connectData.connectionID + 1) + " Connected!";
-            else
-                connectData.connectMessage = "Spectator Connected!";
-        }
+            if (args.at(1) == "CONNECT") {
+                if (connectData.connectionID != -1)
+                    connectData.connectMessage = "Player " + std::to_string(connectData.connectionID + 1) + " Connected!";
+                else
+                    connectData.connectMessage = "Spectator Connected!";
+            }
 
-        else if (args.at(1) == "DISCONNECT") {
-            if (connectData.connectionID != -1)
-                connectData.connectMessage = "Player " + std::to_string(connectData.connectionID + 1) + " Disconnected!";
-            else
-                connectData.connectMessage = "Spectator Disconnected!";
-        }         
+            else if (args.at(1) == "DISCONNECT") {
+                if (connectData.connectionID != -1)
+                    connectData.connectMessage = "Player " + std::to_string(connectData.connectionID + 1) + " Disconnected!";
+                else
+                    connectData.connectMessage = "Spectator Disconnected!";
+            }
+        }               
     }
                           
     else 
