@@ -1,17 +1,27 @@
-﻿  MyGame.cpp
-E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(27,37): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(28,37): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(40,37): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(41,37): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(70,33): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(71,33): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(210,21): warning C4244: 'initializing': conversion from 'Uint32' to 'float', possible loss of data
-E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(237,21): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
-E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(238,21): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
-E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(275,97): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(275,60): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(281,97): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(281,60): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(408,31): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
-E:\Uni work\Multiplayer Games Development\CI628\src\MyGame.cpp(409,31): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+﻿  Main.cpp
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um\winsock.h(301,9): warning C4005: 'INADDR_ANY': macro redefinition
+  (compiling source file '../src/Main.cpp')
+      E:\Uni work\Multiplayer Games Development\CI628\libs\SDL2_net\include\SDL_net.h(102,9):
+      see previous definition of 'INADDR_ANY'
+  
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um\winsock.h(303,9): warning C4005: 'INADDR_BROADCAST': macro redefinition
+  (compiling source file '../src/Main.cpp')
+      E:\Uni work\Multiplayer Games Development\CI628\libs\SDL2_net\include\SDL_net.h(111,9):
+      see previous definition of 'INADDR_BROADCAST'
+  
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um\winsock.h(304,9): warning C4005: 'INADDR_NONE': macro redefinition
+  (compiling source file '../src/Main.cpp')
+      E:\Uni work\Multiplayer Games Development\CI628\libs\SDL2_net\include\SDL_net.h(105,9):
+      see previous definition of 'INADDR_NONE'
+  
+E:\Uni work\Multiplayer Games Development\CI628\src\Main.cpp(59,25): warning C4996: 'strtok': This function or variable may be unsafe. Consider using strtok_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\Uni work\Multiplayer Games Development\CI628\src\Main.cpp(68,23): warning C4996: 'strtok': This function or variable may be unsafe. Consider using strtok_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\Uni work\Multiplayer Games Development\CI628\src\Main.cpp(127,72): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+E:\Uni work\Multiplayer Games Development\CI628\src\Main.cpp(113,14): warning C4101: 'message': unreferenced local variable
+E:\Uni work\Multiplayer Games Development\CI628\src\Main.cpp(267,18): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+E:\Uni work\Multiplayer Games Development\CI628\src\Main.cpp(268,20): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+E:\Uni work\Multiplayer Games Development\CI628\src\Main.cpp(291,39): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+E:\Uni work\Multiplayer Games Development\CI628\src\Main.cpp(295,41): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+E:\Uni work\Multiplayer Games Development\CI628\src\Main.cpp(290,21): warning C4996: 'strcat': This function or variable may be unsafe. Consider using strcat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\Uni work\Multiplayer Games Development\CI628\src\Main.cpp(294,21): warning C4996: 'strcat': This function or variable may be unsafe. Consider using strcat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
   MyGame.vcxproj -> E:\Uni work\Multiplayer Games Development\CI628\build\Debug\MyGame.exe

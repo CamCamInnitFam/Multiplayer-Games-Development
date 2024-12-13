@@ -19,6 +19,7 @@ bool has_made_connection = false;
 int numConnections = 1;
 bool gameActive = false;
 bool quit = false;
+Uint32 delay;
 
 struct connectionData 
 {
@@ -46,8 +47,10 @@ static int on_receive(void* socket_ptr) {
             received = SDLNet_TCP_Recv(socket, message, message_length);
             if (received <= 0) {
                 std::cout << "Nothing to see...";
-                is_running = false;
+                //is_running = false;
                 quit = true;
+                game->setServerActive(false);
+                delay = SDL_GetTicks() + 4000;
                 break;
             }
                     
@@ -89,7 +92,7 @@ static int on_receive(void* socket_ptr) {
             if (cmd == "INITIAL_DATA")
                 numConnections = game->numConnectedClients;
         
-        } while (received > 0 && is_running);
+        } while (received > 0 && !quit);
 
         return 0;
     }
@@ -97,6 +100,7 @@ static int on_receive(void* socket_ptr) {
     {
         std::cout << "Server died!";
         is_running = false;
+        quit = false;
         return 0;
     }
     
@@ -108,7 +112,7 @@ static int on_send(void* socket_ptr) {
         TCPsocket socket = (TCPsocket)socket_ptr;
         char message[1024];
 
-        while (is_running) {
+        while (!quit) {
             if (game->messages.size() > 0) {
                 string message = "CLIENT_DATA";
 
@@ -130,6 +134,7 @@ static int on_send(void* socket_ptr) {
     catch (exception ex) {
         std::cout << "Server Died!";
         is_running = false;
+        quit = true;
         return 0;
     }   
 }
@@ -139,7 +144,12 @@ void loop(SDL_Renderer* renderer) {
     try {
         SDL_Event event;
 
-        while (is_running && !quit) {
+        while (is_running) {
+            if (quit && SDL_GetTicks() > delay) {
+                std::cout << "Waited 4 seconds!" << std::endl;
+                is_running = false;
+                break;
+            }
             // input
             while (SDL_PollEvent(&event)) {
                 if ((event.type == SDL_KEYDOWN || event.type == SDL_KEYUP || event.type == SDL_MOUSEBUTTONDOWN) && event.key.repeat == 0) {
@@ -148,6 +158,7 @@ void loop(SDL_Renderer* renderer) {
                     switch (event.key.keysym.sym) {
                     case SDLK_ESCAPE:
                         is_running = false;
+                        quit = true;
                         break;
 
                     default:
@@ -157,6 +168,7 @@ void loop(SDL_Renderer* renderer) {
 
                 if (event.type == SDL_QUIT) {
                     is_running = false;
+                    quit = true;
                 }
             }
 
@@ -168,8 +180,12 @@ void loop(SDL_Renderer* renderer) {
             game->render(renderer);
 
             SDL_RenderPresent(renderer);
+          
 
             SDL_Delay(17);
+
+           
+
         }
     }
     catch(exception ex){
@@ -366,8 +382,6 @@ void load_connection_screen(SDL_Renderer* renderer, TTF_Font* font)
 
 void load_lobby(SDL_Renderer* renderer, TTF_Font* font) 
 {
-    std::cout << "in lobby";
-
     // Render the screen
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
@@ -379,8 +393,12 @@ void load_lobby(SDL_Renderer* renderer, TTF_Font* font)
     SDL_Color red = { 255, 0 , 0, 255 };
     SDL_Color brown = { 139, 69, 19, 255 };
    
-    while (inLobby && !game_started && !quit)
+    while (inLobby && !game_started)
     {
+        if (quit && SDL_GetTicks() > delay) {
+            inLobby = false;
+            break;
+        }
         game->HeartBeat();
         while (SDL_PollEvent(&e))
         {
@@ -425,6 +443,11 @@ void load_lobby(SDL_Renderer* renderer, TTF_Font* font)
         if (gameActive) {
             startGameText = "Game in progress. Press Enter to join.";
             ready = true;
+        }
+
+        if (!game->isServerActive) {
+            startGameText = "Unable to connect to server. Closing...";
+            ready = false;
         }
 
         // Render the screen
@@ -529,6 +552,7 @@ int main(int argc, char** argv) {
         }
 
         is_running = false;
+        quit = true;
         int threadReturnValue;
         std::cout << "Waiting for threads to exit...";
         SDL_WaitThread(recvThread, &threadReturnValue);

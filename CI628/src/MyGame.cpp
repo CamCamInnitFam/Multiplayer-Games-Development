@@ -207,6 +207,8 @@ void MyGame::input(SDL_Event& event)
 
 void MyGame::update() {
     
+    if (!isServerActive) return;
+    
     float deltaTime = SDL_GetTicks() - lastMessageTime / 1000;
     lastMessageTime = SDL_GetTicks();
     
@@ -222,7 +224,6 @@ void MyGame::update() {
     }
     
     //TODO - calc own position +/- 60px per move
-    //TODO - turn limits
     //TODO - winning and losing
     //TODO - client side prediction
 
@@ -311,6 +312,10 @@ void MyGame::render(SDL_Renderer* renderer) {
     SDL_Color white = { 255, 255, 255, 255 };
     SDL_Color green = { 0, 255, 0, 255 };
     SDL_Color red = { 255, 0 , 0, 255 };
+
+
+    //TODO if(!isServerActive)
+        //show something "Server Closed... Exiting application..."
    
     //Render
 
@@ -341,6 +346,7 @@ void MyGame::render(SDL_Renderer* renderer) {
     std::string bulletsLeftText = "Bullets Left   " + std::string(hasShot ? "O" : "1");
     std::string playerTurnText = "Player Turn ";
     std::string turnNumberText = std::to_string(getCurrentTurn() + 1);
+    
     if (SDL_GetTicks() > checkConnectTextTime + 3000)
         connectData.connectMessage = "";
 
@@ -350,9 +356,9 @@ void MyGame::render(SDL_Renderer* renderer) {
         bulletsLeftText = "";
     }
             
+    
     SDL_Rect p1ScoreRect = { 100,0,250,50 };
-    SDL_Rect p2ScoreRect = { 850,0,250,50 };
-    SDL_Rect connectRect = { 20,780,250,40};
+    SDL_Rect p2ScoreRect = { 850,0,250,50 };  
     SDL_Rect playerTurnRect = { 20,70,200,40 };
     SDL_Rect turnNumberRect = { 230,75,15,40 };
     SDL_Rect movesLeftRect = { 20,150,200,40 };
@@ -360,6 +366,16 @@ void MyGame::render(SDL_Renderer* renderer) {
 
     //Textures (text)
     bool connected = connectData.connectMessage.find("Connected") != std::string::npos;
+    int connectRectWidth = 250;
+
+    if (!isServerActive) {
+        connectData.connectMessage = "Server Connection Closed. Exiting Application...";
+        connected = false;
+        connectRectWidth = connectRectWidth + 150;
+    }
+
+    SDL_Rect connectRect = { 20,780,connectRectWidth,50 };
+
     SDL_Texture* p1Label = renderText(game_data.p1Score > 0 ? ("PLAYER 1 SCORE   " + std::to_string(game_data.p1Score)).c_str() : p1Text.c_str(), font, white, renderer);
     SDL_Texture* p2Label = renderText(game_data.p2Score > 0 ? ("PLAYER 2 SCORE   " + std::to_string(game_data.p2Score)).c_str() : p2Text.c_str(), font, white, renderer);
     SDL_Texture* connectLabel = renderText(connectData.connectMessage.c_str(), font, connected ? green : red, renderer);
@@ -470,4 +486,6 @@ SDL_Texture* MyGame:: renderText(const char* message, TTF_Font* font, SDL_Color 
 }
 void MyGame::setServerActive(bool isActive) {
     isServerActive = isActive;
+    if (!isServerActive)
+        std::cout << "Server Inactive!" << std::endl;
 }
