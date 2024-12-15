@@ -95,8 +95,8 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
     int mousePosX = 0;
     int mousePosY = 0;
     int activeTurn = 0; //0 or 1, -1 for game over?
-    boolean gameOver = false;
     boolean isInLobby = true;
+    boolean gameWon = false;
 
     @Override
     protected void initInput() {
@@ -133,11 +133,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
         initGameObjects();
         initScreenBounds();
 
-
         getdp("p1Rotation").addListener((notUsed, oldValue, newValue) ->{
-            //TODO
-            System.out.println("rotation Changed! " + newValue);
-
             for(Connection connection : server.getConnections())
             {
                 if((boolean)connection.getLocalSessionData().getValue("Connected"))
@@ -148,18 +144,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                     }
                 }
             }
-
-            switch(activeTurn){
-                case(0):
-
-                    break;
-
-                case(1):
-                    break;
-            }
         } );
-
-
 
 
         server = getNetService().newTCPServer(55555, new ServerConfig<>(String.class));
@@ -195,37 +180,26 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             //This will usually be 0 (p1), 1 (p2) or -1 (spectator).
             inc("numClientsConnected", +1);
             connection.addMessageHandlerFX(this);
-            //connection.send("ID," + connection.getLocalSessionData().getValue("ID"));
-            connection.send("INITIAL_DATA," + connection.getLocalSessionData().getValue("ID") + "," + geti("numClientsConnected") + "," + String.valueOf(activeTurn));
+            connection.send("INITIAL_DATA," + connection.getLocalSessionData().getValue("ID")
+                    + "," + geti("numClientsConnected") + "," + String.valueOf(activeTurn));
+
             FXGL.getGameTimer().runOnceAfter(() -> {
                 // Code to run after the wait
-                server.broadcast("CONNECTEVENT," + geti("numClientsConnected") + "," + "CONNECT" + "," + connection.getLocalSessionData().getValue("ID"));
+                server.broadcast("CONNECTEVENT," + geti("numClientsConnected")
+                        + "," + "CONNECT" + "," + connection.getLocalSessionData().getValue("ID"));
             }, Duration.seconds(0.5));
-
-            //Use runOnce to send another message to the client
-            //TODO put this into the ID send? Something like INITALDATA...
-            //runOnce(() -> {
-            //    connection.send("CONNECTEVENT," + geti("numClientsConnected"));
-            //}, Duration.seconds(1));
-
-
 
             if(!isInLobby)
             {
                 runOnce(() -> {
                    connection.send("GAMESTATE");
-                   System.out.println("Ran Once");
-                }, Duration.seconds(1));
+                }, Duration.seconds(0.1));
             }
-
-            //connection.send("CURRENT_TURN," + String.valueOf(activeTurn));
-
         });
 
         server.setOnDisconnected(connection -> {
             System.out.println("CLIENT DISCONNECT");
             inc("numClientsConnected", -1);
-            //connection.send("CONNECTEVENT," + geti("numClientsConnected") + "," + "DISCONNECT");
             server.broadcast("CONNECTEVENT," + geti("numClientsConnected") + "," + "DISCONNECT");
             int connectionID = connection.getLocalSessionData().getValue("ID");
 
@@ -277,7 +251,6 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                 else
                     inc("player1score", +1);
 
-                //server.broadcast(bat == player1 ? BALL_HIT_BAT1 : BALL_HIT_BAT2);
                 server.broadcast("SCORES," + geti("player1score") + "," + geti("player2score"));
             }
 
@@ -322,7 +295,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
             //return back to lobby if clients disconnect
             if(geti("numClientsConnected") <1)
-                resetGame();
+                resetGame(true);
 
             //Send bullet data when there is a bullet active
             String message;
@@ -399,9 +372,16 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
         }
 
      if(server.getConnections().size() < 2){
-            //add AI?
-            //TODO
-        }
+            //TODO add AI
+     }
+
+     if((!gameWon && geti("player1score") >=5) || (!gameWon && geti("player2score") >= 5))
+     {
+         gameWon = true;
+         int winId = geti("player1score") >= 5 ? 0 : 1;
+         server.broadcast("GAMEWIN," + winId);
+         System.out.println("Sending Game Win!\n");
+     }
     }
 
     private void initScreenBounds() {
@@ -526,9 +506,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
             //Check last Signal Time from client
             if(System.currentTimeMillis() > lastHeartBeatTime + 4000){
-                //connection.terminate();
                 int connectionID = connection.getLocalSessionData().getValue("ID");
-                //server.broadcast("CONNECTEVENT," + geti("numClientsConnected") + "," + "DISCONNECT" + "," + connectionID);
                 System.out.println("Client " + connectionID + " disconnected!");
                 connection.getLocalSessionData().setValue("Connected", false);
                 inc("numClientsConnected", -1);
@@ -542,30 +520,23 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
         }
     }
 
-    private void resetGame(){
+    private void resetGame(boolean inLobby){
         System.out.println("Resetting game...");
-        isInLobby = true;
+        isInLobby = inLobby;
         if(bullet != null)
             bullet.removeFromWorld();
-        player1.getComponent(BatComponent.class).reset();
-        player2.getComponent(BatComponent.class).reset();
+        player1.getComponent(BatComponent.class).reset(isInLobby);
+        player2.getComponent(BatComponent.class).reset(isInLobby);
         p1barrelComponent.resetRotation(0);
         p2barrelComponent.resetRotation(180);
         activeTurn = 0;
+        gameWon = false;
         set("player1score", 0);
         set("player2score", 0);
     }
 
     private void spawnBullet()
     {
-        //ensure all bullets are removed before spawning another one
-        /*for(Entity bullet : getGameWorld().getEntitiesByType(EntityType.BULLET))
-        {
-            bullet.removeFromWorld();
-        }*/
-
-        //getPhysicsWorld().onEntityRemoved(bullet) THEN activate new turn??? //TODO
-
         double middlePosX;
         double middlePosY;
         double spawnOffset = 55;
@@ -612,7 +583,8 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             //set velocity
             double bulletSpeed = bullet.getComponent(BallComponent.class).getSpeed();
             bullet.getComponent(PhysicsComponent.class).setLinearVelocity(directionX * bulletSpeed, directionY * bulletSpeed);
-            server.broadcast("BULLET_SPAWN," + bullet.getComponent(PhysicsComponent.class).getVelocityX() + "," + bullet.getComponent(PhysicsComponent.class).getVelocityY() + "," + bullet.getX() + "," + bullet.getY());
+            server.broadcast("BULLET_SPAWN," + bullet.getComponent(PhysicsComponent.class).getVelocityX()
+                    + "," + bullet.getComponent(PhysicsComponent.class).getVelocityY() + "," + bullet.getX() + "," + bullet.getY());
         }
     }
 
@@ -644,8 +616,18 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                 //Swap active turn
                 activeTurn = activeTurn == 0 ? 1 : 0;
 
+                //Get rid of bullet
+                if(bullet != null)
+                    if(bullet.isActive())
+                        bullet.removeFromWorld();
+
                 //Send all active turn
                 server.broadcast("TURN_CHANGE," + String.valueOf(activeTurn));
+            }
+
+            if(key.equals("RESTART_GAME")){
+                resetGame(false);
+                server.broadcast("RESTART");
             }
 
             //MOUSE POS = MP
@@ -657,7 +639,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                     coordinates = key.substring(3, key.length()-1);
                 }
                 catch(Exception e){
-                    System.out.println("errored!");
+                    System.out.println("Cannot Assign Coordinates!");
                 }
 
                 if(coordinates.split("\\.").length == 2)
@@ -737,7 +719,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                     while ((len = in.read(buf)) > 0) {
                         var message = new String(Arrays.copyOf(buf, len));
 
-                        System.out.println("Recv message: " + message);
+                       // System.out.println("Recv message: " + message);
 
                         messages.put(message);
                     }

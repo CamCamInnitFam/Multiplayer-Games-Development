@@ -122,7 +122,7 @@ static int on_send(void* socket_ptr) {
 
                 game->messages.clear();
 
-                cout << "Sending_TCP: " << message << endl;
+                //cout << "Sending_TCP: " << message << endl;
 
                 SDLNet_TCP_Send(socket, message.c_str(), message.length());
             }

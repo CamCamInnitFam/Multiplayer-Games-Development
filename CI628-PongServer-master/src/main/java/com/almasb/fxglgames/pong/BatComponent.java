@@ -148,10 +148,10 @@ public class BatComponent extends Component {
         physics.setLinearVelocity(0, 0);
     }
 
-    public void reset(){
+    public void reset(boolean fullReset){
 
         //Reset Positions
-        Point2D newpoint = new Point2D(0,0);
+        Point2D newpoint;
 
         switch(id){
             case(0):
@@ -160,13 +160,18 @@ public class BatComponent extends Component {
             case(1):
                 newpoint = new Point2D((3 * FXGL.getAppWidth() / 4 + 80), (FXGL.getAppHeight() / 2 +20));
                 break;
+            default:
+                newpoint = new Point2D(0,0);
         }
 
         physics.overwritePosition(newpoint);
 
-        //Reset ID & connected
-        id = -1;
-        connected = false;
+        if(fullReset){
+            //Reset ID & connected
+            id = -1;
+            connected = false;
+        }
+
     }
 
 }

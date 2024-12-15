@@ -8,9 +8,7 @@ MyGame::MyGame() {
 
 }
 
-void MyGame::on_receive(std::string cmd, std::vector<std::string>& args) {
-    lastMessageTime = SDL_GetTicks();
-    
+void MyGame::on_receive(std::string cmd, std::vector<std::string>& args) {  
     if (cmd == "GAME_DATA") {
         if (args.size() == 4) {
             game_data.player1Y = stoi(args.at(0));
@@ -39,6 +37,13 @@ void MyGame::on_receive(std::string cmd, std::vector<std::string>& args) {
 
             game_data.bulletX = stof(args.at(4));
             game_data.bulletY = stof(args.at(5));
+
+            if (predicting) {
+                if (game_data.bulletX - bullet_data.rect.x > 2)
+                    bullet_data.rect.x = game_data.bulletX;
+                if (game_data.bulletY - bullet_data.rect.y > 2)
+                    bullet_data.rect.y = game_data.bulletY;
+            }                    
         }
     }
 
@@ -64,11 +69,14 @@ void MyGame::on_receive(std::string cmd, std::vector<std::string>& args) {
     }
          
     else if (cmd == "BULLET_SPAWN") {
+        std::cout << "BULLET SPAWN" << std::endl;
         bulletOnScreen = true;
         game_data.bulletVelocityX = stof(args.at(0));
         game_data.bulletVelocityY = stof(args.at(1));
         game_data.bulletX = stof(args.at(2));
         game_data.bulletY = stof(args.at(3));
+        bullet_data.rect.x = game_data.bulletX;
+        bullet_data.rect.y = game_data.bulletY;
     }
         
     else if (cmd == "BULLET_DESPAWN") {
@@ -105,7 +113,19 @@ void MyGame::on_receive(std::string cmd, std::vector<std::string>& args) {
             }
         }               
     }
-                          
+
+    else if (cmd == "GAMEWIN" || cmd == "GAMEWINGAME_DATA") {
+        std::cout << "Recieved game win" << std::endl;
+        game_data.winner = stoi(args.at(0));
+        gameWon = true;
+        if (game_data.winner == game_data.id) {
+            isWinner = true;
+        }          
+    }
+
+    else if (cmd == "RESTART") 
+        restartGame();
+                             
     else 
         std::cout << "Received: " << cmd << std::endl;
 
@@ -146,6 +166,15 @@ void MyGame::input(SDL_Event& event)
     }
            
     switch (event.key.keysym.sym) {
+    case(SDLK_RETURN):
+        if (!gameWon)
+            break;
+        if (gameWon && isWinner) 
+        {
+            send("RESTART_GAME");
+        }
+           
+        break;
         //up and down
     case SDLK_w:
         if (numMoves < maxMoves) {
@@ -208,9 +237,12 @@ void MyGame::input(SDL_Event& event)
 void MyGame::update() {
     
     if (!isServerActive) return;
-    
-    float deltaTime = SDL_GetTicks() - lastMessageTime / 1000;
+   
+    float deltaTime = (SDL_GetTicks() - lastMessageTime) / 1000;
     lastMessageTime = SDL_GetTicks();
+
+    if (deltaTime < 0.001f)
+        deltaTime = 0.035; //Fix delta time. Can be too small.
     
     //Send heartbeat to server
     HeartBeat();
@@ -224,23 +256,43 @@ void MyGame::update() {
     }
     
     //TODO - calc own position +/- 60px per move
-    //TODO - winning and losing
-    //TODO - client side prediction
 
-    bullet_data.prevX = bullet_data.rect.x;
-    bullet_data.rect.x = game_data.bulletX;
+    float velocityX;
+    float velocityY;
 
-    bullet_data.prevY = bullet_data.rect.y;
-    bullet_data.rect.y = game_data.bulletY;
-    
+    if (predicting) {
+
+        //Grab last known velocity from server
+        //Necessary as velocity changes due to bouncing
+        velocityX = game_data.bulletVelocityX;
+        velocityY = game_data.bulletVelocityY;
+
+        //Predict the position
+        bullet_data.rect.x += velocityX * deltaTime;
+        bullet_data.rect.y += velocityY * deltaTime;
+
+        //Ensure in bounds
+        if (bullet_data.rect.x + bullet_data.rect.w > 1200)
+            bullet_data.rect.x = 1200 - bullet_data.rect.w;
+        if (bullet_data.rect.y + bullet_data.rect.h > 840)
+            bullet_data.rect.y = 840 - bullet_data.rect.h;
+    }
+    else {
+        bullet_data.prevX = bullet_data.rect.x;
+        bullet_data.rect.x = game_data.bulletX;
+
+        bullet_data.prevY = bullet_data.rect.y;
+        bullet_data.rect.y = game_data.bulletY;
+
+        velocityX = bullet_data.rect.x - bullet_data.prevX;
+        velocityY = bullet_data.rect.y - bullet_data.prevY;
+    }
+
     bullet_data.prevAngle = bullet_data.angle;
-
-    float velocityX = bullet_data.rect.x - bullet_data.prevX;
-    float velocityY = bullet_data.rect.y - bullet_data.prevY;
-
     float angleInRadians = std::atan2f(velocityY , velocityX); // radians
     bullet_data.angle = 180 * angleInRadians / 3.14f; //degrees
 
+    //Ensure angle is never 0 value
     if (bullet_data.angle == 0)
         bullet_data.angle = bullet_data.prevAngle;
 
@@ -258,8 +310,6 @@ void MyGame::update() {
       
     prevMouseX = game_data.cursorX;
     prevMouseY = game_data.cursorY;
-
-    //std::cout << bullet_data.angle << std::endl;
     
     SDL_GetMouseState(&game_data.cursorX, &game_data.cursorY);
 
@@ -299,9 +349,6 @@ void MyGame::update() {
                 p2BarrelAngle = game_data.barrelRotation;
         }
     }
-           
-    bullet.x = game_data.bulletX;
-    bullet.y = game_data.bulletY;
 }
 
 void MyGame::render(SDL_Renderer* renderer) {   
@@ -372,6 +419,19 @@ void MyGame::render(SDL_Renderer* renderer) {
         connectData.connectMessage = "Server Connection Closed. Exiting Application...";
         connected = false;
         connectRectWidth = connectRectWidth + 150;
+    }
+
+    if (gameWon) {
+        if (isWinner) {
+            connectData.connectMessage = "You Win! Press Enter to Restart.";
+            connected = true;
+            connectRectWidth = connectRectWidth + 100;
+        }         
+        else {
+            connectData.connectMessage = "You Lose! Awaiting Restart.";
+            connected = false;
+            connectRectWidth = connectRectWidth + 75;
+        }
     }
 
     SDL_Rect connectRect = { 20,780,connectRectWidth,50 };
@@ -488,4 +548,16 @@ void MyGame::setServerActive(bool isActive) {
     isServerActive = isActive;
     if (!isServerActive)
         std::cout << "Server Inactive!" << std::endl;
+}
+void MyGame::restartGame() 
+{
+    isWinner = false;
+    gameWon = false;
+    game_data.p1Score = 0;
+    game_data.p2Score = 0;
+    hasShot = false;
+    numMoves = 0;
+    currentTurn = 0;
+    bulletOnScreen = false;
+    game_data.winner = 0;
 }

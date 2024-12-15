@@ -23,12 +23,15 @@ static struct GameData {
     float barrelRotation = 0;
     int p1Score = 0;
     int p2Score = 0;
+    int winner = 0;
 } game_data;
 
 static struct BulletData {
     SDL_Rect rect = { 0,0, 18,18 };
     int prevX = 0;
     int prevY = 0;
+    float velocityX;
+    float velocityY;
     float angle = 0;
     float prevAngle = 0;
 } bullet_data;
@@ -46,7 +49,6 @@ class MyGame {
         SDL_Rect player1Barrel = {0,0, 50, 30};
         SDL_Rect player2Barrel = { 0, 0, 50, 30 };
         SDL_Rect player2 = { 0, 0, 60, 60 };
-        SDL_Rect bullet = { 0, 0, 8, 8 };
         SDL_Rect block1 = { 600, 380, 60, 120 };
         SDL_Rect block2 = { 420, 80, 60, 120};
         SDL_Rect block3 = { 780, 80,  60, 120};
@@ -77,7 +79,7 @@ class MyGame {
         bool bulletOnScreen = false;
         Uint32 nextSendTime = SDL_GetTicks();
         Uint32 lastFrameTime = SDL_GetTicks();
-        Uint32 lastMessageTime;
+        Uint32 lastMessageTime = 0;
         int currentTurn = 0; //TODO have timer for turn and will auto send (END_TURN) to server
         float interpolationTime = 0.0f;
         bool initialSync = true;
@@ -89,6 +91,9 @@ class MyGame {
         bool hasShot = false;
         int numMoves = 0;
         bool isServerActive = true;
+        bool gameWon = false;
+        bool isWinner = false;
+        bool predicting = false;
 
         MyGame();
         void on_receive(std::string message, std::vector<std::string>& args);
@@ -108,6 +113,7 @@ class MyGame {
         void destroyTextures();
         SDL_Texture* renderText(const char* message, TTF_Font* font, SDL_Color color, SDL_Renderer* renderer);
         void setServerActive(bool isActive);
+        void restartGame();
 };
 
 #endif
