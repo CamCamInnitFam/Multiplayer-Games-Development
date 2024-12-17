@@ -41,7 +41,7 @@ import static java.lang.Math.signum;
 public class BallComponent extends Component {
 
     private PhysicsComponent physics;
-    double speed = 250;
+    double speed = 350; //250
     int currentBounces = 0;
     int maxBounces = 5;
 

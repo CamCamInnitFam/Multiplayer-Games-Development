@@ -2,6 +2,7 @@
 #include <iostream>
 #include <SDL_image.h>
 #include <SDL_ttf.h>
+#include <SDL_mixer.h>
 
 
 MyGame::MyGame() {
@@ -77,6 +78,9 @@ void MyGame::on_receive(std::string cmd, std::vector<std::string>& args) {
         game_data.bulletY = stof(args.at(3));
         bullet_data.rect.x = game_data.bulletX;
         bullet_data.rect.y = game_data.bulletY;
+
+        //play sound
+        Mix_PlayChannel(-1, bulletSound, 0);
     }
         
     else if (cmd == "BULLET_DESPAWN") {
@@ -93,7 +97,7 @@ void MyGame::on_receive(std::string cmd, std::vector<std::string>& args) {
         game_data.p2Score = stoi(args.at(1));
     }
     else if (cmd == "CONNECTEVENT") {
-        //numConnectedClients = stoi(args.at(0));
+        std::cout << "Recieved Connect Event" << std::endl;
         if (args.size() > 1) {
             connectData.connectionID = stoi(args.at(2));
             checkConnectTextTime = SDL_GetTicks();
@@ -128,10 +132,6 @@ void MyGame::on_receive(std::string cmd, std::vector<std::string>& args) {
                              
     else 
         std::cout << "Received: " << cmd << std::endl;
-
-    //if cmd .includes ("PLAYER)"
-    //id = args.stoi(*id index*)
-    //player[id].NetworkUpdate(cmd, args) ?
 }
 
 void MyGame::send(std::string message) {
@@ -158,8 +158,6 @@ void MyGame::input(SDL_Event& event)
             send("LMB_DOWN");
             SDL_Delay(100);
             send("LMB_UP");
-            //send(std::to_string(game_data.id));
-            //send(event.type == SDL_MOUSEBUTTONDOWN ? "LMB_DOWN" : "LMB_UP");
             hasShot = true;
         }
         return;
@@ -237,12 +235,11 @@ void MyGame::input(SDL_Event& event)
 void MyGame::update() {
     
     if (!isServerActive) return;
-   
-    float deltaTime = (SDL_GetTicks() - lastMessageTime) / 1000;
-    lastMessageTime = SDL_GetTicks();
 
-    if (deltaTime < 0.001f)
-        deltaTime = 0.035; //Fix delta time. Can be too small.
+    float getTicksf = SDL_GetTicks();
+   
+    float deltaTime = (getTicksf - lastMessageTime) / 1000;
+    lastMessageTime = getTicksf;
     
     //Send heartbeat to server
     HeartBeat();
@@ -360,9 +357,6 @@ void MyGame::render(SDL_Renderer* renderer) {
     SDL_Color green = { 0, 255, 0, 255 };
     SDL_Color red = { 255, 0 , 0, 255 };
 
-
-    //TODO if(!isServerActive)
-        //show something "Server Closed... Exiting application..."
    
     //Render
 
@@ -402,8 +396,7 @@ void MyGame::render(SDL_Renderer* renderer) {
         movesLeftText = "";
         bulletsLeftText = "";
     }
-            
-    
+               
     SDL_Rect p1ScoreRect = { 100,0,250,50 };
     SDL_Rect p2ScoreRect = { 850,0,250,50 };  
     SDL_Rect playerTurnRect = { 20,70,200,40 };
@@ -463,15 +456,6 @@ void MyGame::render(SDL_Renderer* renderer) {
     SDL_DestroyTexture(shotsLeftLabel);
 }
 
-void MyGame::PredictBulletPosition(float delta) {
-    //Last known recieved from server
-    int serverPositionX = game_data.bulletX;
-    int serverPositionY = game_data.bulletY;
-    predictedX = serverPositionX + game_data.bulletVelocityX ;
-    predictedY = serverPositionY + game_data.bulletVelocityY ;
-
-    //predictedX = bullet.x + vx * delta ??
-}
 
 void MyGame::Interpolate(float delta) {
     if (interpolationTime < 0.01f) {
@@ -499,9 +483,7 @@ bool MyGame::isCurrentTurn() {
         return true;   
     return false;
 }
-void MyGame::syncPlayerPos() {
 
-}
 
 int MyGame::getPlayerId() {
     return game_data.id;
@@ -509,6 +491,15 @@ int MyGame::getPlayerId() {
 
 void MyGame::loadAssets(SDL_Renderer* renderer) {
     if (!hasLoadedTextures) {
+
+        if (SDL_Init(SDL_INIT_AUDIO) < 0) {
+            printf("Failed to initialise Audio!", SDL_GetError());
+            exit(6);
+        }
+        if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+            printf("SDL mixer could not initialise!", SDL_GetError());
+            exit(6);
+        }
         wallTexture = IMG_LoadTexture(renderer, "../assets/walls.jpg");
         walls2Texture = IMG_LoadTexture(renderer, "../assets/walls2.jpg");
         tankTexture = IMG_LoadTexture(renderer, "../assets/testTank2.png");
@@ -525,6 +516,10 @@ void MyGame::loadAssets(SDL_Renderer* renderer) {
             printf("Failed to load font! TTF_Error: %s\n", TTF_GetError());
             exit(6);
         }
+        bulletSound = Mix_LoadWAV("../assets/gunShot.wav");
+        Mix_VolumeChunk(bulletSound, 10);
+
+
         hasLoadedTextures = true;
     }   
 }

@@ -7,6 +7,7 @@
 
 #include "SDL.h"
 #include <SDL_ttf.h>
+#include <SDL_mixer.h>
 
 static struct GameData {
     int player1Y = 0;
@@ -34,6 +35,7 @@ static struct BulletData {
     float velocityY;
     float angle = 0;
     float prevAngle = 0;
+    int bulletSpeed = 250;
 } bullet_data;
 
 static struct ConnectData {
@@ -68,6 +70,9 @@ class MyGame {
         TTF_Font* font;
         TTF_Font* freshmanFont;
 
+        //Sounds
+        Mix_Chunk* bulletSound;
+
         int maxMoves = 12; // divide by 2 for 6 max moves
         
     public:
@@ -79,7 +84,7 @@ class MyGame {
         bool bulletOnScreen = false;
         Uint32 nextSendTime = SDL_GetTicks();
         Uint32 lastFrameTime = SDL_GetTicks();
-        Uint32 lastMessageTime = 0;
+        float lastMessageTime = 0;
         int currentTurn = 0; //TODO have timer for turn and will auto send (END_TURN) to server
         float interpolationTime = 0.0f;
         bool initialSync = true;
@@ -93,7 +98,7 @@ class MyGame {
         bool isServerActive = true;
         bool gameWon = false;
         bool isWinner = false;
-        bool predicting = false;
+        bool predicting = true;
 
         MyGame();
         void on_receive(std::string message, std::vector<std::string>& args);
@@ -105,9 +110,7 @@ class MyGame {
         int getCurrentTurn();
         void setCurrentTurn(int);
         bool isCurrentTurn();
-        void PredictBulletPosition(float delta);
         void Interpolate(float delta);
-        void syncPlayerPos();
         int getPlayerId();
         void loadAssets(SDL_Renderer* renderer);
         void destroyTextures();

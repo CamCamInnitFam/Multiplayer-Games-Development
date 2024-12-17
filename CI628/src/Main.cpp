@@ -46,8 +46,6 @@ static int on_receive(void* socket_ptr) {
         do {              
             received = SDLNet_TCP_Recv(socket, message, message_length);
             if (received <= 0) {
-                std::cout << "Nothing to see...";
-                //is_running = false;
                 quit = true;
                 game->setServerActive(false);
                 delay = SDL_GetTicks() + 4000;
@@ -146,7 +144,6 @@ void loop(SDL_Renderer* renderer) {
 
         while (is_running) {
             if (quit && SDL_GetTicks() > delay) {
-                std::cout << "Waited 4 seconds!" << std::endl;
                 is_running = false;
                 break;
             }
@@ -181,11 +178,7 @@ void loop(SDL_Renderer* renderer) {
 
             SDL_RenderPresent(renderer);
           
-
-            SDL_Delay(17);
-
-           
-
+            SDL_Delay(17);         
         }
     }
     catch(exception ex){
@@ -527,6 +520,7 @@ int main(int argc, char** argv) {
         printf("Renderer could not be created! SDL_Error: %s\n", SDL_GetError());
         exit(5);
     }
+
 
     // Load font
     TTF_Font* font = TTF_OpenFont("../assets/fonts/Hey Comic.ttf", 25);
