@@ -37,7 +37,7 @@ import javafx.geometry.Point2D;
  */
 public class TankComponent extends Component {
 
-    private static final double TANK_MOVEMENT = 60; //was 40
+    private static final double TANK_MOVEMENT = 60;
     private boolean isColliding = false;
     public int id = -1;
     public boolean connected = false;
