@@ -36,8 +36,6 @@ import com.almasb.fxgl.physics.HitBox;
 import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.physics.box2d.dynamics.BodyType;
 import com.almasb.fxgl.physics.box2d.dynamics.FixtureDef;
-import javafx.beans.binding.Bindings;
-import javafx.scene.effect.BlendMode;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Circle;
@@ -63,7 +61,7 @@ public class PongFactory implements EntityFactory {
                 .view(new Circle(5,5,5, Color.RED))
                 .with(physics)
                 .with(new CollidableComponent(true))
-                .with(new BallComponent())
+                .with(new BulletComponent())
                 .build();
     }
 
@@ -79,7 +77,7 @@ public class PongFactory implements EntityFactory {
                 .viewWithBBox("testTank2.png")
                 .with(new CollidableComponent(true))
                 .with(physics)
-                .with(new BatComponent())
+                .with(new TankComponent())
                 .with(new BarrelComponent(texture("barrel.png")))
                 .rotate(isPlayer ? 0 : 180)
                 .build();

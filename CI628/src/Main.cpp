@@ -15,10 +15,11 @@ const Uint16 PORT = 55555;
 
 bool is_running = true;
 bool game_started = false;
-bool is_connecting = true;
 bool has_made_connection = false;
 int numConnections = 1;
 bool gameActive = false;
+bool quit = false;
+Uint32 delay;
 
 struct connectionData 
 {
@@ -32,118 +33,159 @@ MyGame* game = new MyGame();
 TCPsocket overallSocket;
 
 static int on_receive(void* socket_ptr) {
-    TCPsocket socket = (TCPsocket)socket_ptr;
 
-    const int message_length = 1024;
+    try
+    {
+        TCPsocket socket = (TCPsocket)socket_ptr;
 
-    char message[message_length];
-    int received;
+        const int message_length = 1024;
 
-    // TODO: while(), rather than do
-    do {
-        received = SDLNet_TCP_Recv(socket, message, message_length);
-        message[received] = '\0';
+        char message[message_length];
+        int received;
 
-        char* pch = strtok(message, ",");
-
-        // get the command, which is the first string in the message
-        string cmd(pch);
-
-        // then get the arguments to the command
-        vector<string> args;
-
-        while (pch != NULL) {
-            pch = strtok(NULL, ",");
-
-            if (pch != NULL) {
-                args.push_back(string(pch));
+        do {              
+            received = SDLNet_TCP_Recv(socket, message, message_length);
+            if (received <= 0) {
+                quit = true;
+                game->setServerActive(false);
+                delay = SDL_GetTicks() + 4000;
+                break;
             }
-        }
+                    
+            message[received] = '\0';
 
-        if (cmd == "exit")
-            break;
+            char* pch = strtok(message, ",");
 
-        if (cmd == "CONNECTEVENT") {
-            numConnections = stoi(args.at(0));
-        }
+            // get the command, which is the first string in the message
+            string cmd(pch);
 
-        if (cmd == "GAMESTATE" || cmd == "GAMESTATEGAME_DATA") { //Sometimes server gets confused. This is a hack.
+            // then get the arguments to the command
+            vector<string> args;
+
+            while (pch != NULL) {
+                pch = strtok(NULL, ",");
+
+                if (pch != NULL) {
+                    args.push_back(string(pch));
+                }
+            }
+
+            if (cmd == "exit")
+                break;
+
+            if (cmd == "CONNECTEVENT") {
+                numConnections = stoi(args.at(0));
+            }
+
+            if (cmd == "GAMESTATE" || cmd == "GAMESTATEGAME_DATA") { //Sometimes server gets confused. This is a hack.
                 std::cout << "GameState Recieved" << std::endl;
                 gameActive = true; //allows starting in lobby                                                    
-        }          
+            }
+
+            if (cmd == "GAME_START")
+                game_started = true; //exits lobby loop, lets program know to kill threads when game is closed
+
+            game->on_receive(cmd, args);
+
+            if (cmd == "INITIAL_DATA")
+                numConnections = game->numConnectedClients;
         
-        if (cmd == "GAME_START") 
-            game_started = true; //exits lobby loop, lets program know to kill threads when game is closed
+        } while (received > 0 && !quit);
 
-        game->on_receive(cmd, args);
-
-        if (cmd == "INITIAL_DATA")
-            numConnections = game->numConnectedClients;
-                    
-    } while (received > 0 && is_running);
-
-    return 0;
+        return 0;
+    }
+    catch(exception ex)
+    {
+        std::cout << "Server died!";
+        is_running = false;
+        quit = false;
+        return 0;
+    }
+    
 }
 
 static int on_send(void* socket_ptr) {
-    TCPsocket socket = (TCPsocket)socket_ptr;
+    try 
+    {
+        TCPsocket socket = (TCPsocket)socket_ptr;
+        char message[1024];
 
-    while (is_running) {
-        if (game->messages.size() > 0) {
-            string message = "CLIENT_DATA";
+        while (!quit) {
+            if (game->messages.size() > 0) {
+                string message = "CLIENT_DATA";
 
-            for (auto m : game->messages) {
-                message += "," + m;
+                for (auto m : game->messages) {
+                    message += "," + m;
+                }
+
+                game->messages.clear();
+
+                //cout << "Sending_TCP: " << message << endl;
+
+                SDLNet_TCP_Send(socket, message.c_str(), message.length());
             }
 
-            game->messages.clear();
-
-            cout << "Sending_TCP: " << message << endl;
-
-            SDLNet_TCP_Send(socket, message.c_str(), message.length());
+            SDL_Delay(1);
         }
-
-        SDL_Delay(1);
+        return 0;
     }
-
-    return 0;
+    catch (exception ex) {
+        std::cout << "Server Died!";
+        is_running = false;
+        quit = true;
+        return 0;
+    }   
 }
 
 void loop(SDL_Renderer* renderer) {
-    SDL_Event event;
+       
+    try {
+        SDL_Event event;
 
-    while (is_running) {
-        // input
-        while (SDL_PollEvent(&event)) {
-            if ((event.type == SDL_KEYDOWN || event.type == SDL_KEYUP || event.type == SDL_MOUSEBUTTONDOWN) && event.key.repeat == 0) {
-                game->input(event);
+        while (is_running) {
+            if (quit && SDL_GetTicks() > delay) {
+                is_running = false;
+                break;
+            }
+            // input
+            while (SDL_PollEvent(&event)) {
+                if ((event.type == SDL_KEYDOWN || event.type == SDL_KEYUP || event.type == SDL_MOUSEBUTTONDOWN) && event.key.repeat == 0) {
+                    game->input(event);
 
-                switch (event.key.keysym.sym) {
+                    switch (event.key.keysym.sym) {
                     case SDLK_ESCAPE:
                         is_running = false;
+                        quit = true;
                         break;
 
                     default:
                         break;
+                    }
+                }
+
+                if (event.type == SDL_QUIT) {
+                    is_running = false;
+                    quit = true;
                 }
             }
 
-            if (event.type == SDL_QUIT) {
-                is_running = false;
-            }
+            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+            SDL_RenderClear(renderer);
+
+            game->update();
+
+            game->render(renderer);
+
+            SDL_RenderPresent(renderer);
+          
+            SDL_Delay(17);         
         }
-
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-        SDL_RenderClear(renderer);
-
-        game->update();
-
-        game->render(renderer);
-
-        SDL_RenderPresent(renderer);
-
-        SDL_Delay(17);
     }
+    catch(exception ex){
+        std::cout << "Server Died!";
+        is_running = false;
+    }
+    
 }
 
 int run_game() {
@@ -333,8 +375,6 @@ void load_connection_screen(SDL_Renderer* renderer, TTF_Font* font)
 
 void load_lobby(SDL_Renderer* renderer, TTF_Font* font) 
 {
-    std::cout << "in lobby";
-
     // Render the screen
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
@@ -348,6 +388,10 @@ void load_lobby(SDL_Renderer* renderer, TTF_Font* font)
    
     while (inLobby && !game_started)
     {
+        if (quit && SDL_GetTicks() > delay) {
+            inLobby = false;
+            break;
+        }
         game->HeartBeat();
         while (SDL_PollEvent(&e))
         {
@@ -392,6 +436,11 @@ void load_lobby(SDL_Renderer* renderer, TTF_Font* font)
         if (gameActive) {
             startGameText = "Game in progress. Press Enter to join.";
             ready = true;
+        }
+
+        if (!game->isServerActive) {
+            startGameText = "Unable to connect to server. Closing...";
+            ready = false;
         }
 
         // Render the screen
@@ -472,6 +521,7 @@ int main(int argc, char** argv) {
         exit(5);
     }
 
+
     // Load font
     TTF_Font* font = TTF_OpenFont("../assets/fonts/Hey Comic.ttf", 25);
     if (!font) {
@@ -496,12 +546,14 @@ int main(int argc, char** argv) {
         }
 
         is_running = false;
+        quit = true;
         int threadReturnValue;
         std::cout << "Waiting for threads to exit...";
         SDL_WaitThread(recvThread, &threadReturnValue);
         SDL_WaitThread(sendThread, &threadReturnValue);
     }
    
+   // game->destroyTextures();
     delete game;
       
     // Close connection to the server
