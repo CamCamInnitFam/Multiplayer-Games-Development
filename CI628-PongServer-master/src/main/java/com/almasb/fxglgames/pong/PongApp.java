@@ -40,8 +40,6 @@ import com.almasb.fxgl.physics.CollisionHandler;
 import com.almasb.fxgl.physics.HitBox;
 import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.ui.UI;
-import javafx.beans.property.FloatProperty;
-import javafx.beans.property.ObjectProperty;
 import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
 import javafx.util.Duration;
@@ -78,9 +76,9 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
     private Entity player1;
     private Entity player2;
     private Entity bullet;
-    private BatComponent player1Bat;
+    private TankComponent player1Bat;
     private BarrelComponent p1barrelComponent;
-    private BatComponent player2Bat;
+    private TankComponent player2Bat;
     private BarrelComponent p2barrelComponent;
     private List<Entity> Players;
     private Entity block1;
@@ -156,12 +154,12 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             //loop through all player Entities and check if connected
             //if not - assign id to client and entity
             for(int i = 0; i < Players.size(); i++){
-                if(!Players.get(i).getComponent(BatComponent.class).connected){
+                if(!Players.get(i).getComponent(TankComponent.class).connected){
                     connection.getLocalSessionData().setValue("ID", i);
                     connection.getLocalSessionData().setValue("HeartBeatTime", System.currentTimeMillis() + 2000);
                     connection.getLocalSessionData().setValue("Connected", true);
-                    Players.get(i).getComponent(BatComponent.class).connected = true;
-                    Players.get(i).getComponent(BatComponent.class).id = i;
+                    Players.get(i).getComponent(TankComponent.class).connected = true;
+                    Players.get(i).getComponent(TankComponent.class).id = i;
                     hasSetId = true;
                     System.out.println("Player Connected!");
                     break;
@@ -207,8 +205,8 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                 return;
 
             for(Entity player : Players){
-                if(player.getComponent(BatComponent.class).id == connectionID){
-                    player.getComponent(BatComponent.class).connected = false;
+                if(player.getComponent(TankComponent.class).id == connectionID){
+                    player.getComponent(TankComponent.class).connected = false;
                     System.out.println("Player Disconnected");
                     break;
                 }
@@ -231,9 +229,9 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             protected void onHitBoxTrigger(Entity a, Entity b, HitBox boxA, HitBox boxB) {
                 getGameScene().getViewport().shakeTranslational(5);
 
-                a.getComponent(BallComponent.class).currentBounces ++;
+                a.getComponent(BulletComponent.class).currentBounces ++;
 
-                if(a.getComponent(BallComponent.class).currentBounces >= a.getComponent(BallComponent.class).maxBounces)
+                if(a.getComponent(BulletComponent.class).currentBounces >= a.getComponent(BulletComponent.class).maxBounces)
                     server.broadcast(BULLET_DESPAWN);
             }
         });
@@ -261,9 +259,9 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             protected void onCollisionBegin(Entity bullet, Entity block) {
                 getGameScene().getViewport().shakeTranslational(8);
 
-                bullet.getComponent(BallComponent.class).currentBounces ++;
+                bullet.getComponent(BulletComponent.class).currentBounces ++;
 
-                if(bullet.getComponent(BallComponent.class).currentBounces >= bullet.getComponent(BallComponent.class).maxBounces)
+                if(bullet.getComponent(BulletComponent.class).currentBounces >= bullet.getComponent(BulletComponent.class).maxBounces)
                     server.broadcast(BULLET_DESPAWN);
             }
         };
@@ -348,14 +346,14 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
                     //If not a spectator, make linked player disconnect
                     if(connectionID != -1)
-                        Players.get(connectionID).getComponent(BatComponent.class).connected = false;
+                        Players.get(connectionID).getComponent(TankComponent.class).connected = false;
                 }
             }
 
             //Add spectators to game if one of the main clients disconnect
             for(int i = 0; i < Players.size(); i++)
             {
-                if(!Players.get(i).getComponent(BatComponent.class).connected)
+                if(!Players.get(i).getComponent(TankComponent.class).connected)
                 {
                     for(Connection connection : server.getConnections())
                     {
@@ -364,7 +362,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                         {
                             connection.getLocalSessionData().setValue("ID", i);
                             connection.send("ID," + i);
-                            Players.get(i).getComponent(BatComponent.class).connected = true;
+                            Players.get(i).getComponent(TankComponent.class).connected = true;
                         }
                     }
                 }
@@ -401,9 +399,9 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
         Players.add(player1);
         Players.add(player2);
 
-        player1Bat = player1.getComponent(BatComponent.class);
+        player1Bat = player1.getComponent(TankComponent.class);
         p1barrelComponent = player1.getComponent(BarrelComponent.class);
-        player2Bat = player2.getComponent(BatComponent.class);
+        player2Bat = player2.getComponent(TankComponent.class);
         p2barrelComponent = player2.getComponent(BarrelComponent.class);
 
         block1 = spawn("block", new SpawnData(600, 380));
@@ -435,7 +433,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
     {
         for(int i = 0; i < Players.size(); i++)
         {
-            if(!Players.get(i).getComponent(BatComponent.class).connected)
+            if(!Players.get(i).getComponent(TankComponent.class).connected)
             {
                 for(Connection connection : server.getConnections())
                 {
@@ -444,7 +442,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                     {
                         connection.getLocalSessionData().setValue("ID", i);
                         connection.send("ID," + i);
-                        Players.get(i).getComponent(BatComponent.class).connected = true;
+                        Players.get(i).getComponent(TankComponent.class).connected = true;
                     }
                 }
             }
@@ -458,7 +456,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
         for(Entity player : Players)
         {
-            BatComponent batcomponent = player.getComponent(BatComponent.class);
+            TankComponent batcomponent = player.getComponent(TankComponent.class);
 
             //P1 connected, not interested in swapping
             if (batcomponent.connected  && batcomponent.id == 0)
@@ -473,7 +471,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             {
                 //Swap player 1 for player 2
                 batcomponent.connected = false;
-                Players.get(0).getComponent(BatComponent.class).connected = true;
+                Players.get(0).getComponent(TankComponent.class).connected = true;
                 for(Connection connection : server.getConnections())
                 {
                     if((int)connection.getLocalSessionData().getValue("ID") == 1)//p2
@@ -514,7 +512,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
                 //If not a spectator, make linked player disconnect
                 if(connectionID != -1)
-                    Players.get(connectionID).getComponent(BatComponent.class).connected = false;
+                    Players.get(connectionID).getComponent(TankComponent.class).connected = false;
 
             }
         }
@@ -525,8 +523,8 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
         isInLobby = inLobby;
         if(bullet != null)
             bullet.removeFromWorld();
-        player1.getComponent(BatComponent.class).reset(isInLobby);
-        player2.getComponent(BatComponent.class).reset(isInLobby);
+        player1.getComponent(TankComponent.class).reset(isInLobby);
+        player2.getComponent(TankComponent.class).reset(isInLobby);
         p1barrelComponent.resetRotation(0);
         p2barrelComponent.resetRotation(180);
         activeTurn = 0;
@@ -581,7 +579,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             bullet = spawn("bullet", new SpawnData(middlePosX + directionX * spawnOffset, middlePosY + directionY * spawnOffset));
 
             //set velocity
-            double bulletSpeed = bullet.getComponent(BallComponent.class).getSpeed();
+            double bulletSpeed = bullet.getComponent(BulletComponent.class).getSpeed();
             bullet.getComponent(PhysicsComponent.class).setLinearVelocity(directionX * bulletSpeed, directionY * bulletSpeed);
             server.broadcast("BULLET_SPAWN," + bullet.getComponent(PhysicsComponent.class).getVelocityX()
                     + "," + bullet.getComponent(PhysicsComponent.class).getVelocityY() + "," + bullet.getX() + "," + bullet.getY());
@@ -666,16 +664,16 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                 {
                     switch(key.substring(0, 1)){
                         case("W"):
-                            Players.get(connectionID).getComponent(BatComponent.class).up();
+                            Players.get(connectionID).getComponent(TankComponent.class).up();
                             break;
                         case("A"):
-                            Players.get(connectionID).getComponent(BatComponent.class).left();
+                            Players.get(connectionID).getComponent(TankComponent.class).left();
                             break;
                         case("S"):
-                            Players.get(connectionID).getComponent(BatComponent.class).down();
+                            Players.get(connectionID).getComponent(TankComponent.class).down();
                             break;
                         case("D"):
-                            Players.get(connectionID).getComponent(BatComponent.class).right();
+                            Players.get(connectionID).getComponent(TankComponent.class).right();
                             break;
                     }
                 }

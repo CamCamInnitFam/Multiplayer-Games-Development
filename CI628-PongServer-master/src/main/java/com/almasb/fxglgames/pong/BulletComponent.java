@@ -26,7 +26,6 @@
 
 package com.almasb.fxglgames.pong;
 
-import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.component.Component;
 import com.almasb.fxgl.physics.PhysicsComponent;
 import javafx.geometry.Point2D;
@@ -35,10 +34,7 @@ import static com.almasb.fxgl.dsl.FXGL.*;
 import static java.lang.Math.abs;
 import static java.lang.Math.signum;
 
-/**
- * @author Almas Baimagambetov (AlmasB) (almaslvl@gmail.com)
- */
-public class BallComponent extends Component {
+public class BulletComponent extends Component {
 
     private PhysicsComponent physics;
     double speed = 350; //250
