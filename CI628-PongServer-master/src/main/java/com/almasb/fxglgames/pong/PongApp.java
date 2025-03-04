@@ -30,7 +30,15 @@ import com.almasb.fxgl.animation.Interpolators;
 import com.almasb.fxgl.app.ApplicationMode;
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
+import com.almasb.fxgl.app.services.IOTaskExecutorService;
+import com.almasb.fxgl.core.concurrent.AsyncTask;
+import com.almasb.fxgl.core.concurrent.IOTask;
+//import com.almasb.fxgl.core.concurrent.AsyncTask;
+//import com.almasb.fxgl.core.concurrent.Executor;
+//import com.almasb.fxgl.core.concurrent.*;
 import com.almasb.fxgl.core.math.FXGLMath;
+import com.almasb.fxgl.core.pool.Poolable;
+import com.almasb.fxgl.core.pool.Pools;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.SpawnData;
@@ -144,6 +152,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             }
         } );
 
+        int score = 123456;
 
         server = getNetService().newTCPServer(55555, new ServerConfig<>(String.class));
 
@@ -290,6 +299,9 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                 processLobbyInformation();
                 return;
             }
+
+            Entity player = new Entity();
+
 
             //return back to lobby if clients disconnect
             if(geti("numClientsConnected") <1)
@@ -592,6 +604,8 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
         var tokens = message.split(",");
         int connectionID = connection.getLocalSessionData().getValue("ID");
 
+        //FXGL.getTaskService().runAsync();
+
         Arrays.stream(tokens).skip(1).forEach(key -> {
 
             //Receive heartbeat to establish active connection
@@ -735,6 +749,190 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
         public String read() throws Exception {
             return messages.take();
         }
+    }
+
+    public class exampleCode{
+        public class ExampleBullet implements Poolable{
+
+            double x;
+            double y;
+            double speed;
+
+            @Override
+            public void reset() {
+                x = 0;
+                y = 0;
+                speed = 0;
+            }
+
+            public ExampleBullet(){
+                //constructor
+            }
+        }
+
+        public void spawnBullet(double startX, double startY, double bulletSpeed){
+            //Obtain bullet instance from the pool
+            ExampleBullet bullet = Pools.obtain(ExampleBullet.class);
+            //FXGL.runOnce()
+        }
+
+        public void onBulletCollide(){
+            Pools.free(bullet);
+        }
+
+        Poolable poolableobj = new Poolable() {
+            @Override
+            public void reset() {
+
+            }
+        };
+    }
+
+    public class exampleCode2
+    {
+        //Task that does not return anything
+        IOTask<?> voidTask = IOTask.ofVoid(()->{
+
+        }).onSuccess(result -> {
+
+        }).onFailure(result -> {
+
+        });
+
+
+        //IOTaskExecutorService service = new IOTaskExecutorService();
+
+        //task.runAsync();
+
+        //public class ExampleExecutor implements Executor{
+
+        //opposite of concurrency - allows user to stop and make sure something has run first - perhaps such as a damage calc?
+        AsyncTask<String> boolTask = new AsyncTask<String>() {
+            //blocks current thread to wait for the result of this async task
+            @Override
+            public String await() {
+                return "value";
+            }
+        };
+
+        IOTask<String> taske = new IOTask<String>() {
+            @Override
+            protected String onExecute() throws Exception {
+                return "return";
+            }
+        };
+
+    }
+
+    public void testFunction() throws InterruptedException {
+        //MEMORY MANAGEMENT
+        getAssetLoader().clearCache();
+
+
+        //CONCURRENCY
+
+        //https://github.com/AlmasB/FXGL/blob/dev/fxgl-core/src/main/java/com/almasb/fxgl/core/concurrent/IOTask.java
+        //Success and failure when created
+        IOTask<String> task1 = new IOTask<String>("Load data") {
+            @Override
+            protected String onExecute() throws Exception {
+                return "";
+            }
+        }.onSuccess(success -> {
+            //Success Code
+        }).onFailure(failure -> {
+            //Failure Code
+        });
+
+        IOTask<Void> task2 = new IOTask<Void>() {
+            @Override
+            protected Void onExecute() throws Exception {
+                return null;
+            }
+        };
+
+        //Apply after creation
+
+        task2.onSuccess(result -> {
+            //Assign code to do on success
+
+        });
+
+        task2.onFailure(failure -> {
+            //Assign code to do on failure
+        });
+
+
+
+        //https://github.com/AlmasB/FXGL/blob/dev/fxgl-core/src/main/java/com/almasb/fxgl/core/concurrent/Executor.java
+        FXGL.getExecutor();
+        //OR
+        getExecutor();
+
+        AsyncTask asyncTask = new AsyncTask() {
+            @Override
+            public Object await() {
+                //Do something here....
+                //Program will wait for this.
+                return null;
+            }
+        };
+
+        asyncTask.await();
+
+
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                //Code to run
+            }
+        };
+
+        //Executor can access runnables
+        getExecutor().startAsync(runnable);
+        getExecutor().startAsyncFX(runnable);
+        getExecutor().schedule(runnable, new Duration(10000));
+
+        getExecutor().startAsyncFX(runnable).wait();
+        getExecutor().startAsyncFX(runnable).await();
+        getExecutor().startAsyncFX(runnable).wait(1000);
+
+        getExecutor().execute(runnable);
+
+        //IOTaskEXECUTORSERVICE DEALS WITH IOTASKS CREATED
+        //EXECUTOR DEALS WITH ASYNC TASKS CREATED ??????????
+
+        //can call wait and await on an async task function
+        functionToBeWaited().wait();
+        functionToBeWaited().await();
+
+        AsyncTask<?> newTask = new AsyncTask<Object>() {
+            @Override
+            public Object await() {
+                return null;
+            }
+        };
+
+        getTaskService().run(task1);
+
+        //can wait tasks as well, no need for function?
+        newTask.await();
+        newTask.wait();
+
+        IOTaskExecutorService service = getTaskService(); //OR FXGL.getTaskService();
+        service.runAsync(task1);
+        service.run(task1);
+        task1.run();
+
+        task1.toJavaFXTask();
+        service.runAsyncFX(task1);
+    }
+
+    //has <> so the asynctask can be used for int, string, alldat, '?' for void or null essentially I think
+    public AsyncTask<?> functionToBeWaited(){
+        //Code
+        //code...
+        return null;
     }
 
     public static void main(String[] args) {

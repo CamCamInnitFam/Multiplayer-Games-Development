@@ -9,6 +9,7 @@
 #include <SDL_ttf.h>
 #include <SDL_mixer.h>
 
+
 static struct GameData {
     int player1Y = 0;
     int player1X = 0;
@@ -43,6 +44,11 @@ static struct ConnectData {
     std::string oldConnectMessage = "";
     int connectionID;
 } connectData;
+
+struct Entity {
+    std::string name = "";
+    int id = -1;
+};
 
 class MyGame {
 
@@ -98,7 +104,7 @@ class MyGame {
         bool isServerActive = true;
         bool gameWon = false;
         bool isWinner = false;
-        bool predicting = true;
+        bool predicting = true; 
 
         MyGame();
         void on_receive(std::string message, std::vector<std::string>& args);
