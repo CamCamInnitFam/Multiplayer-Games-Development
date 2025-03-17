@@ -31,16 +31,21 @@ import com.almasb.fxgl.app.ApplicationMode;
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.app.services.IOTaskExecutorService;
+import com.almasb.fxgl.core.Inject;
 import com.almasb.fxgl.core.concurrent.AsyncTask;
 import com.almasb.fxgl.core.concurrent.IOTask;
+import com.almasb.fxgl.core.EngineService;
 //import com.almasb.fxgl.core.concurrent.AsyncTask;
 //import com.almasb.fxgl.core.concurrent.Executor;
 //import com.almasb.fxgl.core.concurrent.*;
 import com.almasb.fxgl.core.math.FXGLMath;
 import com.almasb.fxgl.core.pool.Poolable;
 import com.almasb.fxgl.core.pool.Pools;
+import com.almasb.fxgl.core.reflect.ReflectionUtils;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
+import com.almasb.fxgl.entity.EntityFactory;
+import com.almasb.fxgl.entity.Preload;
 import com.almasb.fxgl.entity.SpawnData;
 import com.almasb.fxgl.input.UserAction;
 import com.almasb.fxgl.net.*;
@@ -48,11 +53,15 @@ import com.almasb.fxgl.physics.CollisionHandler;
 import com.almasb.fxgl.physics.HitBox;
 import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.ui.UI;
+import javafx.concurrent.Task;
 import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
 import javafx.util.Duration;
 
 import java.io.*;
+//import com.almasb.fxgl.net.http.HttpClientService;
+import java.lang.reflect.Method;
+import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -111,7 +120,11 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             @Override
             protected void onActionBegin() {spawnBullet();}
         }, MouseButton.PRIMARY);
+
+
     }
+
+
 
     @Override
     protected void initGameVars(Map<String, Object> vars) {
@@ -122,7 +135,6 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
         vars.put("mousePosY", 0.0);
         vars.put("p1Rotation", 0.0);
         vars.put("p2Rotation", 0.0);
-
     }
 
     @Override
@@ -130,29 +142,30 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
         Writers.INSTANCE.addTCPWriter(String.class, outputStream -> new MessageWriterS(outputStream));
         Readers.INSTANCE.addTCPReader(String.class, in -> new MessageReaderS(in));
         Players = new ArrayList<>();
-
         //Set up world before server?
 
         getGameWorld().addEntityFactory(new PongFactory());
         getGameScene().setBackgroundColor(Color.DARKGREEN);
 
         initGameObjects();
+        //getService(HttpClientService.class);
         initScreenBounds();
 
-        getdp("p1Rotation").addListener((notUsed, oldValue, newValue) ->{
-            for(Connection connection : server.getConnections())
-            {
-                if((boolean)connection.getLocalSessionData().getValue("Connected"))
-                {
-                    int id = (int)connection.getLocalSessionData().getValue("ID");
-                    if(id != activeTurn){
+        getdp("p1Rotation").addListener((notUsed, oldValue, newValue) -> {
+            for (Connection connection : server.getConnections()) {
+                if ((boolean) connection.getLocalSessionData().getValue("Connected")) {
+                    int id = (int) connection.getLocalSessionData().getValue("ID");
+                    if (id != activeTurn) {
                         connection.send("BARREL_ROTATION," + newValue);
                     }
                 }
             }
-        } );
+        });
 
-        int score = 123456;
+        int p1score = getWorldProperties().getValue("player1score");
+        p1score = geti("player1score");
+
+
 
         server = getNetService().newTCPServer(55555, new ServerConfig<>(String.class));
 
@@ -162,8 +175,8 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
             //loop through all player Entities and check if connected
             //if not - assign id to client and entity
-            for(int i = 0; i < Players.size(); i++){
-                if(!Players.get(i).getComponent(TankComponent.class).connected){
+            for (int i = 0; i < Players.size(); i++) {
+                if (!Players.get(i).getComponent(TankComponent.class).connected) {
                     connection.getLocalSessionData().setValue("ID", i);
                     connection.getLocalSessionData().setValue("HeartBeatTime", System.currentTimeMillis() + 2000);
                     connection.getLocalSessionData().setValue("Connected", true);
@@ -176,7 +189,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             }
 
             //make extras -1 (they can spectate) they are still connected
-            if(!hasSetId){
+            if (!hasSetId) {
                 connection.getLocalSessionData().setValue("ID", -1);
                 connection.getLocalSessionData().setValue("Connected", true);
                 connection.getLocalSessionData().setValue("HeartBeatTime", System.currentTimeMillis() + 2000);
@@ -196,10 +209,9 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                         + "," + "CONNECT" + "," + connection.getLocalSessionData().getValue("ID"));
             }, Duration.seconds(0.5));
 
-            if(!isInLobby)
-            {
+            if (!isInLobby) {
                 runOnce(() -> {
-                   connection.send("GAMESTATE");
+                    connection.send("GAMESTATE");
                 }, Duration.seconds(0.1));
             }
         });
@@ -210,11 +222,11 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             server.broadcast("CONNECTEVENT," + geti("numClientsConnected") + "," + "DISCONNECT");
             int connectionID = connection.getLocalSessionData().getValue("ID");
 
-            if(connectionID == -1)
+            if (connectionID == -1)
                 return;
 
-            for(Entity player : Players){
-                if(player.getComponent(TankComponent.class).id == connectionID){
+            for (Entity player : Players) {
+                if (player.getComponent(TankComponent.class).id == connectionID) {
                     player.getComponent(TankComponent.class).connected = false;
                     System.out.println("Player Disconnected");
                     break;
@@ -223,11 +235,11 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
         });
 
-
         var t = new Thread(server.startTask()::run);
         t.setDaemon(true);
         t.start();
     }
+
 
     @Override
     protected void initPhysics() {
@@ -588,7 +600,8 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             double directionY = deltaY / length;
 
             //spawn bullet
-            bullet = spawn("bullet", new SpawnData(middlePosX + directionX * spawnOffset, middlePosY + directionY * spawnOffset));
+            bullet = spawn("bullet",
+                    new SpawnData(middlePosX + directionX * spawnOffset, middlePosY + directionY * spawnOffset));
 
             //set velocity
             double bulletSpeed = bullet.getComponent(BulletComponent.class).getSpeed();
@@ -851,6 +864,15 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
             }
         };
 
+        IOTask<Integer> task = new IOTask<Integer>() {
+            @Override
+            protected Integer onExecute() throws Exception {
+                return 0;
+            }
+        };
+
+
+
         //Apply after creation
 
         task2.onSuccess(result -> {
@@ -865,10 +887,8 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
 
 
         //https://github.com/AlmasB/FXGL/blob/dev/fxgl-core/src/main/java/com/almasb/fxgl/core/concurrent/Executor.java
-        FXGL.getExecutor();
-        //OR
-        getExecutor();
 
+        FXGL.getExecutor();
         AsyncTask asyncTask = new AsyncTask() {
             @Override
             public Object await() {
@@ -877,10 +897,7 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                 return null;
             }
         };
-
         asyncTask.await();
-
-
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
@@ -912,6 +929,8 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
                 return null;
             }
         };
+        //Perhaps await wouldn't do anything here?
+
 
         getTaskService().run(task1);
 
@@ -922,6 +941,9 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
         IOTaskExecutorService service = getTaskService(); //OR FXGL.getTaskService();
         service.runAsync(task1);
         service.run(task1);
+        service.runAsyncFX(task1);
+        service.runAsyncFXWithDialog(task1, "Task 1 is now Running...");
+        //Optionally, run task directly
         task1.run();
 
         task1.toJavaFXTask();
@@ -934,6 +956,99 @@ public class PongApp extends GameApplication implements MessageHandler<String> {
         //code...
         return null;
     }
+
+    public void concurrencyCode()
+    {
+        IOTask<String> loadLevelTask = new IOTask<String>() {
+            @Override
+            protected String onExecute() throws Exception {
+                return "LevelData: Level 1";
+            }
+        }.onSuccess(success -> {
+            System.out.println("Level 1 Loaded Successfully. " + success);
+
+        }).onFailure(failure -> {
+            System.out.println("Level 1 Load Failed. " + failure);
+        });
+
+        getTaskService().run(loadLevelTask);
+
+        Runnable spawnBullet = new Runnable() {
+            @Override
+            public void run() {
+                int spawnX = 0;
+                int spawnY = 0;
+                bullet = spawn("bullet", new SpawnData(spawnX, spawnY));
+                System.out.println("Bullet Spawned!");
+            }
+        };
+
+        getExecutor().schedule(spawnBullet, new Duration(5000) );
+        getExecutor().execute(()->{
+            System.out.println("Executing bespoke functionality...");
+        });
+
+        Task<?> fxTask = loadLevelTask.toJavaFXTask();
+        getExecutor().startAsyncFX(fxTask);
+    }
+
+    public void networkExample()
+    {
+        var server = getNetService().newTCPServer(5555, new ServerConfig<>(String.class));
+        server.setOnConnected(connection -> {
+            connection.addMessageHandlerFX((conn, message) ->{
+                //Message received from the client
+                if(message.equals("Data Request")){
+                    System.out.println("Client Requesting data...");
+                    connection.send("Level 1");
+                }
+            });
+            int nextId = server.getConnections().size() +1;
+            connection.getLocalSessionData().setValue("id", nextId);
+            server.broadcast("Client-Connection " + nextId);
+        });
+
+        server.setOnDisconnected(connection ->{
+            server.broadcast("Client-Disconnection " + (int)connection.getLocalSessionData().getValue("id"));
+        });
+
+        server.startAsync();
+
+        var client = getNetService().newTCPClient("localhost", 55555);
+        client.setOnConnected(bundleConnection -> {
+            bundleConnection.addMessageHandlerFX((conn, message) ->{
+                //Message received from the server
+                if(message.toString().equals("Client-Disconnection")){
+                    System.out.println("Client Recognises disconnection");
+                }
+            });
+        });
+
+        client.connectAsync();
+    }
+
+    public void reflectionExample(){
+        Method privateMethod = ReflectionUtils.getMethod(ExampleClass.class, "setId", int.class);
+        Method publicMethod = ReflectionUtils.getMethod(ExampleClass.class, "getId");
+        ExampleClass instance = ReflectionUtils.newInstance(ExampleClass.class);
+
+        int id = ReflectionUtils.call(instance, publicMethod);
+        ReflectionUtils.callInaccessible(instance, privateMethod, 1);
+        //OR
+        privateMethod.setAccessible(true);
+        ReflectionUtils.call(instance, privateMethod, 1);
+    }
+
+    class ExampleClass{
+        private int id;
+        private void setId(int id){
+            this.id = id;
+        }
+        public int getId(){
+            return id;
+        }
+    }
+
 
     public static void main(String[] args) {
         launch(args);
